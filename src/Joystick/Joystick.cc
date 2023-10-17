@@ -701,15 +701,16 @@ void Joystick::_handleAxis()
                     buttonPressedBits |= buttonBit;
                 }
             }
-            emit axisValues(roll, pitch, yaw, throttle);
 
             uint16_t shortButtons = static_cast<uint16_t>(buttonPressedBits & 0xFFFF);
             _activeVehicle->sendJoystickDataThreadSafe(roll, pitch, yaw, throttle, shortButtons);
-            emit axisValues(roll, -pitch, yaw, throttle); // Used by joystick cal screen
+            
+            // This is to notify QML joystick display
+            emit axisValues(roll, pitch, yaw, throttle, gimbalPitch, gimbalYaw);
+
             if(_activeVehicle && _axisCount > 4 && _gimbalEnabled) {
-                //-- TODO: There is nothing consuming this as there are no messages to handle gimbal
-                //   the way MANUAL_CONTROL handles the other channels.
-                emit manualControlGimbal((gimbalPitch + 1.0f) / 2.0f * 90.0f, gimbalYaw * 180.0f);
+                // Here we handle the gimbal pitch and yaw sending action to vehicle
+                _activeVehicle->sendJoystickExtraDataThreadSafe(gimbalPitch, gimbalYaw);
             }
         }
     }

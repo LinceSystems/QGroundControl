@@ -14,7 +14,7 @@
 
 QGC_LOGGING_CATEGORY(JoystickConfigControllerLog, "JoystickConfigControllerLog")
 
-#define ENABLE_GIMBAL 0
+#define ENABLE_GIMBAL 1
 
 const int JoystickConfigController::_calCenterPoint =       0;
 const int JoystickConfigController::_calValidMinValue =     -32768;     ///< Largest valid minimum axis value
@@ -763,8 +763,8 @@ void JoystickConfigController::_signalAllAttitudeValueChanges()
     emit pitchAxisReversedChanged(pitchAxisReversed());
     emit yawAxisReversedChanged(yawAxisReversed());
     emit throttleAxisReversedChanged(throttleAxisReversed());
-    emit gimbalPitchAxisReversedChanged(pitchAxisReversed());
-    emit gimbalYawAxisReversedChanged(yawAxisReversed());
+    emit gimbalPitchAxisReversedChanged(gimbalPitchAxisReversed());
+    emit gimbalYawAxisReversedChanged(gimbalYawAxisReversed());
 
     emit transmitterModeChanged(_transmitterMode);
 }

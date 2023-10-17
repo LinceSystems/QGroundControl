@@ -127,6 +127,14 @@ Item {
                 }
             }
         }
+        QGCLabel {
+            text:               qsTr("Gimbal control in Ardupilot will only work after parameters are downloaded. It will check RCX_FUCNTION until finding gimbal pitch/yaw (213/214), and will send an RC_OVERRIDE mavlink message just for those channels. Roll, pitch, yaw and throttle will work before parameters are Downloaded")
+            visible:            advancedSettings.checked
+            Layout.alignment:   Qt.AlignVCenter
+            Layout.columnSpan:  2
+            wrapMode:           Text.WordWrap
+            Layout.preferredWidth: ScreenTools.defaultFontPixelWidth * 30 
+        }
         //-----------------------------------------------------------------
         //-- Axis Message Frequency
         QGCLabel {
