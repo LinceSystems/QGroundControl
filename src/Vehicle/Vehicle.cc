@@ -4012,6 +4012,40 @@ void Vehicle::_vehicleParamLoaded(bool ready)
     if(ready) {
         emit hobbsMeterChanged();
     }
+
+    // Check for rcx_options regarding mount
+    for (int i = 4; i <= 16; i++ ) {
+        // Lets create the name of the parameter over the way
+
+        // First part, common to all
+        QStringList rcChannelStringList;
+        rcChannelStringList << "RC";
+
+        // Now lets add chan number
+        QString chanNumber;
+        chanNumber.setNum(i);
+        rcChannelStringList << chanNumber;
+
+        // We should have now RCX, need to add the ending of parameter
+        QString optionString = "_OPTION";
+        rcChannelStringList << optionString;
+
+        // Convert the list of strings to a single string, to pass to parameter manager getParameter
+        QString rcChannelOptionString = rcChannelStringList.join("");
+
+        // qDebug() << rcChannelOptionString;
+
+        // Lets check if it is fuel level sensor, batt_monitor == 18 ardupilot parameter
+        if (parameterManager()->getParameter(_compID, rcChannelOptionString)->rawValue().toInt() == 214) {
+            // qDebug() << "found yaw Channel: " << i;
+            _gimbalPanChannel = i;
+        }
+        // Lets check if it is fuel level sensor, batt_monitor == 18 ardupilot parameter
+        if (parameterManager()->getParameter(_compID, rcChannelOptionString)->rawValue().toInt() == 213) {
+            // qDebug() << "found pitch Channel" << i;
+            _gimbalTiltChannel = i;
+        }
+    }
 }
 
 void Vehicle::_mavlinkMessageStatus(int uasId, uint64_t totalSent, uint64_t totalReceived, uint64_t totalLoss, float lossPercent)
@@ -4470,6 +4504,86 @@ void Vehicle::sendJoystickDataThreadSafe(float roll, float pitch, float yaw, flo
                 static_cast<int16_t>(newYawCommand),
                 buttons,
                 0, 0, 0, 0);
+    sendMessageOnLinkThreadSafe(sharedLink.get(), message);
+}
+
+void Vehicle::sendJoystickExtraDataThreadSafe (float gimbalPitch, float gimbalYaw)
+{
+    if (!_gimbalTiltChannel || !_gimbalPanChannel) {
+        // qCDebug(VehicleLog) << "Vehicle::sendJoystickExtraDataThreadSafe: gimbal pitch or gimbal yaw channels not found!";
+        return;
+    }
+    SharedLinkInterfacePtr sharedLink = vehicleLinkManager()->primaryLink().lock();
+    if (!sharedLink) {
+        qCDebug(VehicleLog) << "sendJoystickExtraDataThreadSafe: primary link gone!";
+        return;
+    }
+
+    if (sharedLink->linkConfiguration()->isHighLatency()) {
+        return;
+    }
+
+    mavlink_message_t message;
+
+    // Incoming values are in the range -1:1
+    uint16_t gimbalPitchus  = 1500 + gimbalPitch * 500;  
+    uint16_t gimbalYawus    = 1500 + gimbalYaw   * 500;
+    uint16_t channel5data   = _gimbalTiltChannel == 5  ? gimbalPitchus : _gimbalPanChannel == 5  ? gimbalYawus : UINT16_MAX; 
+    uint16_t channel6data   = _gimbalTiltChannel == 6  ? gimbalPitchus : _gimbalPanChannel == 6  ? gimbalYawus : UINT16_MAX; 
+    uint16_t channel7data   = _gimbalTiltChannel == 7  ? gimbalPitchus : _gimbalPanChannel == 7  ? gimbalYawus : UINT16_MAX; 
+    uint16_t channel8data   = _gimbalTiltChannel == 8  ? gimbalPitchus : _gimbalPanChannel == 8  ? gimbalYawus : UINT16_MAX; 
+    uint16_t channel9data   = _gimbalTiltChannel == 9  ? gimbalPitchus : _gimbalPanChannel == 9  ? gimbalYawus : UINT16_MAX; 
+    uint16_t channel10data  = _gimbalTiltChannel == 10 ? gimbalPitchus : _gimbalPanChannel == 10 ? gimbalYawus : UINT16_MAX; 
+    uint16_t channel11data  = _gimbalTiltChannel == 11 ? gimbalPitchus : _gimbalPanChannel == 11 ? gimbalYawus : UINT16_MAX; 
+    uint16_t channel12data  = _gimbalTiltChannel == 12 ? gimbalPitchus : _gimbalPanChannel == 12 ? gimbalYawus : UINT16_MAX; 
+    uint16_t channel13data  = _gimbalTiltChannel == 13 ? gimbalPitchus : _gimbalPanChannel == 13 ? gimbalYawus : UINT16_MAX; 
+    uint16_t channel14data  = _gimbalTiltChannel == 14 ? gimbalPitchus : _gimbalPanChannel == 14 ? gimbalYawus : UINT16_MAX; 
+    uint16_t channel15data  = _gimbalTiltChannel == 15 ? gimbalPitchus : _gimbalPanChannel == 15 ? gimbalYawus : UINT16_MAX; 
+    uint16_t channel16data  = _gimbalTiltChannel == 16 ? gimbalPitchus : _gimbalPanChannel == 16 ? gimbalYawus : UINT16_MAX; 
+    uint16_t channel17data  = _gimbalTiltChannel == 17 ? gimbalPitchus : _gimbalPanChannel == 17 ? gimbalYawus : UINT16_MAX; 
+    uint16_t channel18data  = _gimbalTiltChannel == 18 ? gimbalPitchus : _gimbalPanChannel == 18 ? gimbalYawus : UINT16_MAX; 
+
+    // qDebug() << channel5data
+    //          <<  channel6data
+    //          <<  channel7data
+    //          <<  channel8data
+    //          <<  channel9data
+    //          <<  channel10data
+    //          <<  channel11data
+    //          <<  channel12data
+    //          <<  channel13data
+    //          <<  channel14data
+    //          <<  channel15data
+    //          <<  channel16data
+    //          <<  channel17data
+    //          <<  channel18data; 
+
+    mavlink_msg_rc_channels_override_pack_chan(
+        static_cast<uint8_t>(_mavlink->getSystemId()),
+        static_cast<uint8_t>(_mavlink->getComponentId()),
+        sharedLink->mavlinkChannel(),
+        &message,
+        static_cast<uint8_t>(_id),
+        static_cast<uint8_t>(_compID),
+        UINT16_MAX,    // Channel 1
+        UINT16_MAX,    // Channel 2
+        UINT16_MAX,    // Channel 3
+        UINT16_MAX,    // Channel 4
+        channel5data,  // Channel 5
+        channel6data,  // Channel 6
+        channel7data,  // Channel 7
+        channel8data,  // Channel 8
+        channel9data,  // Channel 9
+        channel10data, // Channel 10
+        channel11data, // Channel 11
+        channel12data, // Channel 12
+        channel13data, // Channel 13
+        channel14data, // Channel 14
+        channel15data, // Channel 15
+        channel16data, // Channel 16
+        channel17data, // Channel 16
+        channel18data  // Channel 16
+    );
     sendMessageOnLinkThreadSafe(sharedLink.get(), message);
 }
 

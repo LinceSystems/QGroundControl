@@ -491,6 +491,7 @@ public:
     bool joystickEnabled            () const;
     void setJoystickEnabled         (bool enabled);
     void sendJoystickDataThreadSafe (float roll, float pitch, float yaw, float thrust, quint16 buttons);
+    void sendJoystickExtraDataThreadSafe (float gimbalPitch, float gimbalYaw);
 
     // Property accesors
     int id() const{ return _id; }
@@ -1254,6 +1255,8 @@ private:
     bool                _haveGimbalData = false;
     bool                _isROIEnabled   = false;
     Joystick*           _activeJoystick = nullptr;
+    uint8_t             _gimbalPanChannel = 0;
+    uint8_t             _gimbalTiltChannel = 0;
 
     bool _checkLatestStableFWDone = false;
     int _firmwareMajorVersion = versionNotSetValue;
