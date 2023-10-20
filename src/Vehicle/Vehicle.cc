@@ -4296,13 +4296,6 @@ void Vehicle::_altitudeAboveTerrainReceived(bool success, QList<double> heights)
 
 void Vehicle::gimbalControlValue(double pitch, double yaw)
 {
-    if (apmFirmware()) {
-        // ArduPilot firmware treats this values as centi-degrees
-        pitch *= 100;
-        yaw *= 100;
-    }
-
-    //qDebug() << "Gimbal:" << pitch << yaw;
     sendMavCommand(
                 _defaultComponentId,
                 MAV_CMD_DO_MOUNT_CONTROL,
