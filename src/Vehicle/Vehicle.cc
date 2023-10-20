@@ -4316,31 +4316,6 @@ void Vehicle::gimbalControlValue(double pitch, double yaw)
                 MAV_MOUNT_MODE_MAVLINK_TARGETING);   // MAVLink Roll,Pitch,Yaw
 }
 
-void Vehicle::gimbalPitchStep(int direction)
-{
-    if(_haveGimbalData) {
-        //qDebug() << "Pitch:" << _curGimbalPitch << direction << (_curGimbalPitch + direction);
-        double p = static_cast<double>(_curGimbalPitch + direction);
-        gimbalControlValue(p, static_cast<double>(_curGimbalYaw));
-    }
-}
-
-void Vehicle::gimbalYawStep(int direction)
-{
-    if(_haveGimbalData) {
-        //qDebug() << "Yaw:" << _curGimbalYaw << direction << (_curGimbalYaw + direction);
-        double y = static_cast<double>(_curGimbalYaw + direction);
-        gimbalControlValue(static_cast<double>(_curGimbalPitch), y);
-    }
-}
-
-void Vehicle::centerGimbal()
-{
-    if(_haveGimbalData) {
-        gimbalControlValue(0.0, 0.0);
-    }
-}
-
 void Vehicle::_handleGimbalOrientation(const mavlink_message_t& message)
 {
     mavlink_mount_orientation_t o;
