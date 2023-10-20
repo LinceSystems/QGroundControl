@@ -215,9 +215,6 @@ signals:
     void startVideoRecord           ();
     void stopVideoRecord            ();
     void toggleVideoRecord          ();
-    void gimbalPitchStep            (int direction);
-    void gimbalYawStep              (int direction);
-    void centerGimbal               ();
     void gimbalControlValue         (double pitch, double yaw);
     void setArmed                   (bool arm);
     void setVtolInFwdFlight         (bool set);

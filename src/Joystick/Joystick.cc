@@ -724,9 +724,6 @@ void Joystick::startPolling(Vehicle* vehicle)
             disconnect(this, &Joystick::setArmed,           _activeVehicle, &Vehicle::setArmedShowError);
             disconnect(this, &Joystick::setVtolInFwdFlight, _activeVehicle, &Vehicle::setVtolInFwdFlight);
             disconnect(this, &Joystick::setFlightMode,      _activeVehicle, &Vehicle::setFlightMode);
-            disconnect(this, &Joystick::gimbalPitchStep,    _activeVehicle, &Vehicle::gimbalPitchStep);
-            disconnect(this, &Joystick::gimbalYawStep,      _activeVehicle, &Vehicle::gimbalYawStep);
-            disconnect(this, &Joystick::centerGimbal,       _activeVehicle, &Vehicle::centerGimbal);
             disconnect(this, &Joystick::gimbalControlValue, _activeVehicle, &Vehicle::gimbalControlValue);
             disconnect(this, &Joystick::emergencyStop,      _activeVehicle, &Vehicle::emergencyStop);
             disconnect(this, &Joystick::gripperAction,      _activeVehicle, &Vehicle::setGripperAction);
@@ -748,9 +745,6 @@ void Joystick::startPolling(Vehicle* vehicle)
             connect(this, &Joystick::setArmed,           _activeVehicle, &Vehicle::setArmedShowError);
             connect(this, &Joystick::setVtolInFwdFlight, _activeVehicle, &Vehicle::setVtolInFwdFlight);
             connect(this, &Joystick::setFlightMode,      _activeVehicle, &Vehicle::setFlightMode);
-            connect(this, &Joystick::gimbalPitchStep,    _activeVehicle, &Vehicle::gimbalPitchStep);
-            connect(this, &Joystick::gimbalYawStep,      _activeVehicle, &Vehicle::gimbalYawStep);
-            connect(this, &Joystick::centerGimbal,       _activeVehicle, &Vehicle::centerGimbal);
             connect(this, &Joystick::gimbalControlValue, _activeVehicle, &Vehicle::gimbalControlValue);
             connect(this, &Joystick::emergencyStop,      _activeVehicle, &Vehicle::emergencyStop);
             connect(this, &Joystick::gripperAction,      _activeVehicle, &Vehicle::setGripperAction);
@@ -770,9 +764,6 @@ void Joystick::stopPolling(void)
             disconnect(this, &Joystick::setArmed,           _activeVehicle, &Vehicle::setArmedShowError);
             disconnect(this, &Joystick::setVtolInFwdFlight, _activeVehicle, &Vehicle::setVtolInFwdFlight);
             disconnect(this, &Joystick::setFlightMode,      _activeVehicle, &Vehicle::setFlightMode);
-            disconnect(this, &Joystick::gimbalPitchStep,    _activeVehicle, &Vehicle::gimbalPitchStep);
-            disconnect(this, &Joystick::gimbalYawStep,      _activeVehicle, &Vehicle::gimbalYawStep);
-            disconnect(this, &Joystick::centerGimbal,       _activeVehicle, &Vehicle::centerGimbal);
             disconnect(this, &Joystick::gimbalControlValue, _activeVehicle, &Vehicle::gimbalControlValue);
             disconnect(this, &Joystick::gripperAction,      _activeVehicle, &Vehicle::setGripperAction);
             disconnect(_activeVehicle, &Vehicle::flightModesChanged, this, &Joystick::_flightModesChanged);
