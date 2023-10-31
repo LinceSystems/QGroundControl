@@ -34,6 +34,9 @@ SetupPage {
     // Override this, it is the only way of showing that warning when vehicle armed so Joystick settings can't be changed
     _disableDueToArmed: globals.activeVehicle ? globals.activeVehicle.armed : false
     
+    // This property enables reusing this menu and all its childs for different joysticks
+    property var isSecondary: false
+
     Connections {
         target: joystickManager
         onAvailableJoysticksChanged: {
@@ -52,7 +55,7 @@ SetupPage {
 
             readonly property real  labelToMonitorMargin:   ScreenTools.defaultFontPixelWidth * 3
 
-            property var  _activeJoystick:          joystickManager.activeJoystick
+            property var  _activeJoystick:          controller.isSecondary ? joystickManager.activeJoystickSecondary : joystickManager.activeJoystick
             property bool _allowJoystickSelection:  QGroundControl.corePlugin.options.allowJoystickSelection
 
             function setupPageCompleted() {
@@ -60,7 +63,16 @@ SetupPage {
             }
 
             JoystickConfigController {
-                id:             controller
+                id: controller        
+                
+                property bool initialized: false
+                
+                // It is important to initialize JoystickConfigController like this so we can specify if it refers to primary or secondary joystick from qml
+                Component.onCompleted: {
+                    controller.isSecondary = joystickPage.isSecondary
+                    controller.init()
+                    initialized = true
+                }
             }
 
             QGCTabBar {
