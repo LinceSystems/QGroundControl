@@ -337,7 +337,7 @@ private:
     static const char* _roverTXModeSettingsKey;
     static const char* _vtolTXModeSettingsKey;
     static const char* _submarineTXModeSettingsKey;
-    static const char* _gimbalSettingsKey;
+    static const char* _gimbalEnabledSettingsKey;
 
     static const char* _buttonActionNone;
     static const char* _buttonActionArm;

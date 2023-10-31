@@ -40,7 +40,7 @@ const char* Joystick::_multiRotorTXModeSettingsKey =    "TXMode_MultiRotor";
 const char* Joystick::_roverTXModeSettingsKey =         "TXMode_Rover";
 const char* Joystick::_vtolTXModeSettingsKey =          "TXMode_VTOL";
 const char* Joystick::_submarineTXModeSettingsKey =     "TXMode_Submarine";
-const char* Joystick::_gimbalSettingsKey =              "GimbalEnabled";
+const char* Joystick::_gimbalEnabledSettingsKey =       "GimbalEnabled";
 
 const char* Joystick::_buttonActionNone =               QT_TR_NOOP("No Action");
 const char* Joystick::_buttonActionArm =                QT_TR_NOOP("Arm");
@@ -262,7 +262,7 @@ void Joystick::_loadSettings()
     _buttonFrequencyHz  = settings.value(_buttonFrequencySettingsKey,   _defaultButtonFrequencyHz).toFloat();
     _circleCorrection   = settings.value(_circleCorrectionSettingsKey,  false).toBool();
     _negativeThrust     = settings.value(_negativeThrustSettingsKey,    false).toBool();
-    _gimbalEnabled      = settings.value(_gimbalSettingsKey,            false).toBool();
+    _gimbalEnabled      = settings.value(_gimbalEnabledSettingsKey,     false).toBool();
 
     _throttleMode   = static_cast<ThrottleMode_t>(settings.value(_throttleModeSettingsKey, ThrottleModeDownZero).toInt(&convertOk));
     badSettings |= !convertOk;
@@ -367,7 +367,7 @@ void Joystick::_saveSettings()
     settings.setValue(_buttonFrequencySettingsKey,  _buttonFrequencyHz);
     settings.setValue(_throttleModeSettingsKey,     _throttleMode);
     settings.setValue(_negativeThrustSettingsKey,   _negativeThrust);
-    settings.setValue(_gimbalSettingsKey,           _gimbalEnabled);
+    settings.setValue(_gimbalEnabledSettingsKey,    _gimbalEnabled);
     settings.setValue(_circleCorrectionSettingsKey, _circleCorrection);
 
     qCDebug(JoystickLog) << "_saveSettings calibrated:throttlemode:deadband:txmode" << _calibrated << _throttleMode << _deadband << _circleCorrection << _transmitterMode;
