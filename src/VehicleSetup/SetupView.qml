@@ -51,7 +51,7 @@ Rectangle {
             if (QGroundControl.multiVehicleManager.activeVehicle.autopilot.vehicleComponents.length === 0) {
                 panelLoader.setSourceComponent(noComponentsVehicleSummaryComponent)
             } else {
-                panelLoader.setSource("VehicleSummary.qml")
+                panelLoader.setSourceWithVehicleComponent("VehicleSummary.qml")
             }
         } else if (QGroundControl.multiVehicleManager.parameterReadyVehicleAvailable) {
             panelLoader.setSourceComponent(missingParametersVehicleSummaryComponent)
@@ -66,7 +66,7 @@ Rectangle {
             return
         }
         button.checked = true
-        panelLoader.setSource(qmlSource)
+        panelLoader.setSourceWithVehicleComponent(qmlSource)
     }
 
     function showVehicleComponentPanel(vehicleComponent)
@@ -80,7 +80,7 @@ Rectangle {
             _messagePanelText = qsTr("%1 setup must be completed prior to %2 setup.").arg(prereq).arg(vehicleComponent.name)
             panelLoader.setSourceComponent(messagePanelComponent)
         } else {
-            panelLoader.setSource(vehicleComponent.setupSource, vehicleComponent)
+            panelLoader.setSourceWithVehicleComponent(vehicleComponent.setupSource, vehicleComponent)
             for(var i = 0; i < componentRepeater.count; i++) {
                 var obj = componentRepeater.itemAt(i);
                 if (obj.text === vehicleComponent.name) {
@@ -325,7 +325,7 @@ Rectangle {
         anchors.top:            parent.top
         anchors.bottom:         parent.bottom
 
-        function setSource(source, vehicleComponent) {
+        function setSourceWithVehicleComponent(source, vehicleComponent) {
             panelLoader.source = ""
             panelLoader.vehicleComponent = vehicleComponent
             panelLoader.source = source
