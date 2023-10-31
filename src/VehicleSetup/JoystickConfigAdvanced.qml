@@ -87,32 +87,14 @@ Item {
                 text:   expoSlider.value.toFixed(2)
             }
         }
-        //-----------------------------------------------------------------
-        //-- Enable Advanced Mode
-        QGCLabel {
-            text:               qsTr("Enable further advanced settings (careful!)")
-            Layout.alignment:   Qt.AlignVCenter
-            Layout.minimumWidth: ScreenTools.defaultFontPixelWidth * 36
-        }
-        QGCCheckBox {
-            id:         advancedSettings
-            checked:    globals.activeVehicle.joystickMode !== 0
-            onClicked: {
-                if (!checked) {
-                    globals.activeVehicle.joystickMode = 0
-                }
-            }
-        }
         //---------------------------------------------------------------------
         //-- Enable Gimbal
         QGCLabel {
             text:               qsTr("Enable gimbal control (Experimental)")
-            visible:            advancedSettings.checked
             Layout.alignment:   Qt.AlignVCenter
         }
         QGCCheckBox {
             id:                 enabledGimbal
-            visible:            advancedSettings.checked
             enabled:            _activeJoystick
             onClicked:          _activeJoystick.gimbalEnabled = checked
             Component.onCompleted: {
@@ -129,7 +111,6 @@ Item {
         }
         QGCLabel {
             text:               qsTr("Gimbal control in Ardupilot will only work after parameters are downloaded. It will check RCX_FUCNTION until finding gimbal pitch/yaw (213/214), and will send an RC_OVERRIDE mavlink message just for those channels. Roll, pitch, yaw and throttle will work before parameters are Downloaded")
-            visible:            advancedSettings.checked
             Layout.alignment:   Qt.AlignVCenter
             Layout.columnSpan:  2
             wrapMode:           Text.WordWrap
@@ -140,75 +121,62 @@ Item {
         QGCLabel {
             text:               qsTr("Axis frequency (Hz):")
             Layout.alignment:   Qt.AlignVCenter
-            visible:            advancedSettings.checked
         }
         QGCTextField {
             text:               _activeJoystick.axisFrequencyHz
-            enabled:            advancedSettings.checked
             validator:          DoubleValidator { bottom: _activeJoystick.minAxisFrequencyHz; top: _activeJoystick.maxAxisFrequencyHz; }
             inputMethodHints:   Qt.ImhFormattedNumbersOnly
             Layout.alignment:   Qt.AlignVCenter
             onEditingFinished: {
                 _activeJoystick.axisFrequencyHz = parseFloat(text)
             }
-            visible:            advancedSettings.checked
         }
         //-----------------------------------------------------------------
         //-- Button Repeat Frequency
         QGCLabel {
             text:               qsTr("Button repeat frequency (Hz):")
             Layout.alignment:   Qt.AlignVCenter
-            visible:            advancedSettings.checked
         }
         QGCTextField {
             text:               _activeJoystick.buttonFrequencyHz
-            enabled:            advancedSettings.checked
             validator:          DoubleValidator { bottom: _activeJoystick.minButtonFrequencyHz; top: _activeJoystick.maxButtonFrequencyHz; }
             inputMethodHints:   Qt.ImhFormattedNumbersOnly
             Layout.alignment:   Qt.AlignVCenter
             onEditingFinished: {
                 _activeJoystick.buttonFrequencyHz = parseFloat(text)
             }
-            visible:            advancedSettings.checked
         }
         //-----------------------------------------------------------------
         //-- Enable circle correction
         QGCLabel {
             text:               qsTr("Enable circle correction")
             Layout.alignment:   Qt.AlignVCenter
-            visible:            advancedSettings.checked
         }
         QGCCheckBox {
             checked:            globals.activeVehicle.joystickMode !== 0
-            enabled:            advancedSettings.checked
             Component.onCompleted: {
                 checked = _activeJoystick.circleCorrection
             }
             onClicked: {
                 _activeJoystick.circleCorrection = checked
             }
-            visible:            advancedSettings.checked
         }
         //-----------------------------------------------------------------
         //-- Deadband
         QGCLabel {
             text:               qsTr("Deadbands")
             Layout.alignment:   Qt.AlignVCenter
-            visible:            advancedSettings.checked
         }
         QGCCheckBox {
-            enabled:            advancedSettings.checked
             checked:            controller.deadbandToggle
             onClicked:          controller.deadbandToggle = checked
             Layout.alignment:   Qt.AlignVCenter
-            visible:            advancedSettings.checked
         }
         QGCLabel{
             Layout.fillWidth:   true
             Layout.columnSpan:  2
             font.pointSize:     ScreenTools.smallFontPointSize
             wrapMode:           Text.WordWrap
-            visible:            advancedSettings.checked
             text:   qsTr("Deadband can be set during the first ") +
                     qsTr("step of calibration by gently wiggling each axis. ") +
                     qsTr("Deadband can also be adjusted by clicking and ") +
