@@ -24,12 +24,14 @@
 
 QGC_LOGGING_CATEGORY(JoystickManagerLog, "JoystickManagerLog")
 
-const char * JoystickManager::_settingsGroup =              "JoystickManager";
-const char * JoystickManager::_settingsKeyActiveJoystick =  "ActiveJoystick";
+const char * JoystickManager::_settingsGroup =                       "JoystickManager";
+const char * JoystickManager::_settingsKeyActiveJoystick =           "ActiveJoystick";
+const char * JoystickManager::_settingsKeyActiveJoystickSecondary =  "ActiveJoystickSecondary";
 
 JoystickManager::JoystickManager(QGCApplication* app, QGCToolbox* toolbox)
     : QGCTool(app, toolbox)
     , _activeJoystick(nullptr)
+    , _activeJoystickSecondary(nullptr)
     , _multiVehicleManager(nullptr)
 {
 }
@@ -58,7 +60,7 @@ void JoystickManager::init() {
     if (!JoystickSDL::init()) {
         return;
     }
-    _setActiveJoystickFromSettings();
+    _setActiveJoysticksFromSettings();
 #elif defined(__android__)
     if (!JoystickAndroid::init(this)) {
         return;
@@ -70,7 +72,7 @@ void JoystickManager::init() {
     _joystickCheckTimer.start(1000);
 }
 
-void JoystickManager::_setActiveJoystickFromSettings(void)
+void JoystickManager::_setActiveJoysticksFromSettings(void)
 {
     QMap<QString,Joystick*> newMap;
 
@@ -84,6 +86,11 @@ void JoystickManager::_setActiveJoystickFromSettings(void)
     if (_activeJoystick && !newMap.contains(_activeJoystick->name())) {
         qCDebug(JoystickManagerLog) << "Active joystick removed";
         setActiveJoystick(nullptr);
+    }
+
+    if (_activeJoystickSecondary && !newMap.contains(_activeJoystickSecondary->name())) {
+        qCDebug(JoystickManagerLog) << "Active joystick secondary removed";
+        setActiveJoystickSecondary(nullptr);
     }
 
     // Check to see if our current mapping contains any joysticks that are not in the new mapping
@@ -103,6 +110,7 @@ void JoystickManager::_setActiveJoystickFromSettings(void)
 
     if (!_name2JoystickMap.count()) {
         setActiveJoystick(nullptr);
+        setActiveJoystickSecondary(nullptr);
         return;
     }
 
@@ -114,14 +122,43 @@ void JoystickManager::_setActiveJoystickFromSettings(void)
     if (name.isEmpty()) {
         name = _name2JoystickMap.first()->name();
     }
-
+    // Set by default active joystick to first joystick, if not found in settings
     setActiveJoystick(_name2JoystickMap.value(name, _name2JoystickMap.first()));
     settings.setValue(_settingsKeyActiveJoystick, _activeJoystick->name());
+
+    // Only proceed here if we have more than 1 joystick
+    if (_name2JoystickMap.count() <= 1) {
+        return;
+    }
+
+    QString nameSecondary = settings.value(_settingsKeyActiveJoystickSecondary).toString();
+    QList name2JoystickMapKeys = _name2JoystickMap.keys();
+    
+    // By default joystick secondary is second joystick, if not found in settings
+    if (nameSecondary.isEmpty()) {
+        // Assign to second value
+        nameSecondary = name2JoystickMapKeys.value(qint64(1));
+    }
+
+    setActiveJoystickSecondary(_name2JoystickMap.value(nameSecondary));
+    // Paranoid check, if for some reason code above is changed and we get something wrong,
+    // _activeJoystickSecondary could be nullptr, and it would crash when accesing it
+    if (!_activeJoystickSecondary) {
+        qCDebug(JoystickManagerLog) << "active joystick secondary is null";
+        setActiveJoystickSecondary(nullptr);
+        return;
+    }
+    settings.setValue(_settingsKeyActiveJoystickSecondary, _activeJoystickSecondary->name());
 }
 
 Joystick* JoystickManager::activeJoystick(void)
 {
     return _activeJoystick;
+}
+
+Joystick* JoystickManager::activeJoystickSecondary(void)
+{
+    return _activeJoystickSecondary;
 }
 
 void JoystickManager::setActiveJoystick(Joystick* joystick)
@@ -154,6 +191,36 @@ void JoystickManager::setActiveJoystick(Joystick* joystick)
     emit activeJoystickNameChanged(_activeJoystick?_activeJoystick->name():"");
 }
 
+void JoystickManager::setActiveJoystickSecondary(Joystick* joystick)
+{
+    QSettings settings;
+
+    if (joystick != nullptr && !_name2JoystickMap.contains(joystick->name())) {
+        qCWarning(JoystickManagerLog) << "Set active secondary not in map" << joystick->name();
+        return;
+    }
+
+    if (_activeJoystickSecondary == joystick) {
+        return;
+    }
+
+    if (_activeJoystickSecondary) {
+        _activeJoystickSecondary->stopPolling();
+    }
+
+    _activeJoystickSecondary = joystick;
+
+    if (_activeJoystickSecondary != nullptr) {
+        qCDebug(JoystickManagerLog) << "Set active secondary:" << _activeJoystickSecondary->name();
+
+        settings.beginGroup(_settingsGroup);
+        settings.setValue(_settingsKeyActiveJoystickSecondary, _activeJoystickSecondary->name());
+    }
+
+    emit activeJoystickSecondaryChanged(_activeJoystickSecondary);
+    emit activeJoystickSecondaryNameChanged(_activeJoystickSecondary?_activeJoystickSecondary->name():"");
+}
+
 QVariantList JoystickManager::joysticks(void)
 {
     QVariantList list;
@@ -175,6 +242,11 @@ QString JoystickManager::activeJoystickName(void)
     return _activeJoystick ? _activeJoystick->name() : QString();
 }
 
+QString JoystickManager::activeJoystickSecondaryName(void)
+{
+    return _activeJoystickSecondary ? _activeJoystickSecondary->name() : QString();
+}
+
 bool JoystickManager::setActiveJoystickName(const QString& name)
 {
     if (_name2JoystickMap.contains(name)) {
@@ -182,6 +254,17 @@ bool JoystickManager::setActiveJoystickName(const QString& name)
         return true;
     } else {
         qCWarning(JoystickManagerLog) << "Set active not in map" << name;
+        return false;
+    }
+}
+
+bool JoystickManager::setActiveJoystickSecondaryName(const QString& name)
+{
+    if (_name2JoystickMap.contains(name)) {
+        setActiveJoystickSecondary(_name2JoystickMap[name]);
+        return true;
+    } else {
+        qCWarning(JoystickManagerLog) << "Set active secondary not in map" << name;
         return false;
     }
 }
@@ -200,11 +283,11 @@ void JoystickManager::_updateAvailableJoysticks()
             break;
         case SDL_JOYDEVICEADDED:
             qCDebug(JoystickManagerLog) << "Joystick added:" << event.jdevice.which;
-            _setActiveJoystickFromSettings();
+            _setActiveJoysticksFromSettings();
             break;
         case SDL_JOYDEVICEREMOVED:
             qCDebug(JoystickManagerLog) << "Joystick removed:" << event.jdevice.which;
-            _setActiveJoystickFromSettings();
+            _setActiveJoysticksFromSettings();
             break;
         default:
             break;
@@ -212,7 +295,7 @@ void JoystickManager::_updateAvailableJoysticks()
     }
 #elif defined(__android__)
     _joystickCheckTimerCounter--;
-    _setActiveJoystickFromSettings();
+    _setActiveJoysticksFromSettings();
     if (_joystickCheckTimerCounter <= 0) {
         _joystickCheckTimer.stop();
     }

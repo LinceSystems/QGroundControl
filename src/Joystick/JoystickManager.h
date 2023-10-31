@@ -36,6 +36,9 @@ public:
     Q_PROPERTY(Joystick* activeJoystick READ activeJoystick WRITE setActiveJoystick NOTIFY activeJoystickChanged)
     Q_PROPERTY(QString activeJoystickName READ activeJoystickName WRITE setActiveJoystickName NOTIFY activeJoystickNameChanged)
 
+    Q_PROPERTY(Joystick* activeJoystickSecondary READ activeJoystickSecondary WRITE setActiveJoystickSecondary NOTIFY activeJoystickSecondaryChanged)
+    Q_PROPERTY(QString activeJoystickSecondaryName READ activeJoystickSecondaryName WRITE setActiveJoystickSecondaryName NOTIFY activeJoystickSecondaryNameChanged)
+
     /// List of available joysticks
     QVariantList joysticks();
     /// List of available joystick names
@@ -46,8 +49,16 @@ public:
     /// Set active joystick
     void setActiveJoystick(Joystick* joystick);
 
+    /// Get active joystickSecondary
+    Joystick* activeJoystickSecondary(void);
+    /// Set active joystickSecondary
+    void setActiveJoystickSecondary(Joystick* joystick);
+
     QString activeJoystickName(void);
     bool setActiveJoystickName(const QString& name);
+
+    QString activeJoystickSecondaryName(void);
+    bool setActiveJoystickSecondaryName(const QString& name);
 
     void restartJoystickCheckTimer(void);
 
@@ -60,6 +71,8 @@ public slots:
 signals:
     void activeJoystickChanged(Joystick* joystick);
     void activeJoystickNameChanged(const QString& name);
+    void activeJoystickSecondaryChanged(Joystick* joystick);
+    void activeJoystickSecondaryNameChanged(const QString& name);
     void availableJoysticksChanged(void);
     void updateAvailableJoysticksSignal();
 
@@ -67,15 +80,17 @@ private slots:
     void _updateAvailableJoysticks(void);
 
 private:
-    void _setActiveJoystickFromSettings(void);
+    void _setActiveJoysticksFromSettings(void);
 
 private:
     Joystick*                   _activeJoystick;
+    Joystick*                   _activeJoystickSecondary;
     QMap<QString, Joystick*>    _name2JoystickMap;
     MultiVehicleManager*        _multiVehicleManager;
 
     static const char * _settingsGroup;
     static const char * _settingsKeyActiveJoystick;
+    static const char * _settingsKeyActiveJoystickSecondary;
 
     int _joystickCheckTimerCounter;
     QTimer _joystickCheckTimer;
