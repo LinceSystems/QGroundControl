@@ -263,13 +263,38 @@ Rectangle {
                 setupComplete:      _activeJoystick ? _activeJoystick.calibrated || _buttonsOnly : false
                 exclusiveGroup:     setupButtonGroup
                 visible:            _fullParameterVehicleAvailable && joystickManager.joysticks.length !== 0
-                text:               _forcedToButtonsOnly ? qsTr("Buttons") : qsTr("Joystick")
+                text:               _forcedToButtonsOnly ? 
+                                            joystickSecondaryButton.visible ? qsTr("Primary Buttons") : qsTr("Buttons") : 
+                                                joystickSecondaryButton.visible ? qsTr("Primary Joystick") : qsTr("Joystick")
                 Layout.fillWidth:   true
                 onClicked:          showPanel(this, "JoystickConfig.qml")
 
                 property var    _activeJoystick:        joystickManager.activeJoystick
                 property bool   _buttonsOnly:           _activeJoystick ? _activeJoystick.axisCount == 0 : false
                 property bool   _forcedToButtonsOnly:   !QGroundControl.corePlugin.options.allowJoystickSelection && _buttonsOnly
+            }
+
+            SubMenuButton {
+                id:                 joystickSecondaryButton
+                imageResource:      "/qmlimages/Joystick.png"
+                setupIndicator:     true
+                setupComplete:      _activeJoystick ? _activeJoystick.calibrated || _buttonsOnly : false
+                exclusiveGroup:     setupButtonGroup
+                visible:            _fullParameterVehicleAvailable && joystickManager.joysticks.length > 1
+                text:               _forcedToButtonsOnly ? qsTr("Secondary Buttons") : qsTr("Secondary Joystick")
+                Layout.fillWidth:   true
+                
+                onClicked: {
+                        if (mainWindow.preventViewSwitch()) {
+                            return
+                        }
+                        checked = true
+                        panelLoader.setSource("JoystickConfig.qml", { "isSecondary": "true"})
+                }
+
+                property var    _activeJoystick:          joystickManager.activeJoystickSecondary
+                property bool   _buttonsOnly:             _activeJoystick ? _activeJoystick.axisCount == 0 : false
+                property bool   _forcedToButtonsOnly:     !QGroundControl.corePlugin.options.allowJoystickSelection && _buttonsOnly
             }
 
             Repeater {
