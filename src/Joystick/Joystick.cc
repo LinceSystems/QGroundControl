@@ -718,6 +718,7 @@ void Joystick::_handleAxis()
 
 void Joystick::startPolling(Vehicle* vehicle)
 {
+    qCDebug(JoystickLog) << "start polling joystick: " << _name;
     if (vehicle) {
         // If a vehicle is connected, disconnect it
         if (_activeVehicle) {
@@ -733,6 +734,7 @@ void Joystick::startPolling(Vehicle* vehicle)
         _activeVehicle = vehicle;
         // If joystick is not calibrated, disable it
         if ( axisCount() != 0 && !_calibrated ) {
+            qCDebug(JoystickLog) << "Joystick: " << _name << "startPolling: setting joystick enabled to false on vehicle, because of not being calibrated";
             vehicle->setJoystickEnabled(false);
         }
         // Update qml in case of joystick transition
@@ -759,6 +761,7 @@ void Joystick::startPolling(Vehicle* vehicle)
 
 void Joystick::stopPolling(void)
 {
+    qCDebug(JoystickLog) << "stop polling joystick: " << _name;
     if (isRunning()) {
         if (_activeVehicle && _activeVehicle->joystickEnabled()) {
             disconnect(this, &Joystick::setArmed,           _activeVehicle, &Vehicle::setArmedShowError);
@@ -775,6 +778,7 @@ void Joystick::stopPolling(void)
 void Joystick::setCalibration(int axis, Calibration_t& calibration)
 {
     if (!_validAxis(axis)) {
+        qCWarning(JoystickLog) << "setCalibration: invalid axis index " << axis;
         return;
     }
     _calibrated = true;
@@ -786,6 +790,7 @@ void Joystick::setCalibration(int axis, Calibration_t& calibration)
 Joystick::Calibration_t Joystick::getCalibration(int axis)
 {
     if (!_validAxis(axis)) {
+        qCWarning(JoystickLog) << "getCalibration: invalid axis index " << axis;
         return Calibration_t();
     }
     return _rgCalibration[axis];
@@ -794,6 +799,7 @@ Joystick::Calibration_t Joystick::getCalibration(int axis)
 void Joystick::setFunctionAxis(AxisFunction_t function, int axis)
 {
     if (!_validAxis(axis)) {
+        qCWarning(JoystickLog) << "setFunctionAxis: invalid axis index " << axis;
         return;
     }
     _calibrated = true;
