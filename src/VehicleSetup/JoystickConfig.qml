@@ -31,6 +31,9 @@ SetupPage {
     readonly property real  _maxButtons:         64
     readonly property real  _attitudeLabelWidth: ScreenTools.defaultFontPixelWidth * 12
 
+    // Override this, it is the only way of showing that warning when vehicle armed so Joystick settings can't be changed
+    _disableDueToArmed: globals.activeVehicle ? globals.activeVehicle.armed : false
+    
     Connections {
         target: joystickManager
         onAvailableJoysticksChanged: {
@@ -96,7 +99,7 @@ SetupPage {
 
             Loader {
                 id:             joyLoader
-                source:         pages[bar.currentIndex]
+                source:         controller.initialized ? pages[bar.currentIndex] : undefined
                 width:          parent.width
                 anchors.top:    bar.bottom
             }
