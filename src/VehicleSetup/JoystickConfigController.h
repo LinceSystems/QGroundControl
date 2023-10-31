@@ -68,9 +68,12 @@ public:
     Q_PROPERTY(QList<qreal> stickPositions      READ stickPositions             NOTIFY stickPositionsChanged)
     Q_PROPERTY(QList<qreal> gimbalPositions     READ gimbalPositions            NOTIFY gimbalPositionsChanged)
 
+    Q_PROPERTY(bool isSecondary                 READ isSecondary                WRITE setIsSecondary NOTIFY isSecondaryChanged)
+
     Q_INVOKABLE void cancelButtonClicked    ();
     Q_INVOKABLE void skipButtonClicked      ();
     Q_INVOKABLE void nextButtonClicked      ();
+    Q_INVOKABLE void init                   ();
     Q_INVOKABLE void start                  ();
     Q_INVOKABLE void setDeadbandValue       (int axis, int value);
 
@@ -108,6 +111,9 @@ public:
     QList<qreal> stickPositions             () { return _currentStickPositions; }
     QList<qreal> gimbalPositions            () { return _currentGimbalPositions; }
 
+    bool isSecondary                        () { return _isSecondary; }
+    void setIsSecondary                     (bool set) { _isSecondary = set; emit isSecondaryChanged(_isSecondary); }
+
     struct stateStickPositions {
         qreal   leftX;
         qreal   leftY;
@@ -143,9 +149,10 @@ signals:
 
     // @brief Signalled when in unit test mode and a message box should be displayed by the next button
     void nextButtonMessageBoxDisplayed      ();
+    void isSecondaryChanged                 (bool isSecondary);
 
 private slots:
-    void _activeJoystickChanged(Joystick* joystick);
+    void _parentJoystickChanged(Joystick* joystick);
     void _axisValueChanged(int axis, int value);
     void _axisDeadbandChanged(int axis, int value);
 
@@ -185,7 +192,7 @@ private:
         int                         deadband;   ///< Deadband
     };
 
-    Joystick* _activeJoystick = nullptr;
+    Joystick* _parentJoystick = nullptr;        // The joystick this config controller refers to. Might be primary or secondary
 
     int _transmitterMode    = 2;
     int _currentStep        = -1;  ///< Current step of state machine
@@ -277,6 +284,8 @@ private:
 
     QString             _statusText;
     JoystickManager*    _joystickManager;
+
+    bool                _isSecondary = false;
 };
 
 #endif // JoystickConfigController_H

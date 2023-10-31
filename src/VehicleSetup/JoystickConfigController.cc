@@ -91,9 +91,18 @@ static const JoystickConfigController::stateStickPositions stGimbalYawRight {
 JoystickConfigController::JoystickConfigController(void)
     : _joystickManager(qgcApp()->toolbox()->joystickManager())
 {
-    
-    connect(_joystickManager, &JoystickManager::activeJoystickChanged, this, &JoystickConfigController::_activeJoystickChanged);
-    _activeJoystickChanged(_joystickManager->activeJoystick());
+}
+
+// This init will be called from QML after it loads this object. This way, we can set isSecondary from Qml
+void JoystickConfigController::init(void)
+{
+    if (_isSecondary) {
+        connect(_joystickManager, &JoystickManager::activeJoystickSecondaryChanged, this, &JoystickConfigController::_parentJoystickChanged);
+        _parentJoystickChanged(_joystickManager->activeJoystickSecondary());
+    } else {
+        connect(_joystickManager, &JoystickManager::activeJoystickChanged, this, &JoystickConfigController::_parentJoystickChanged);
+        _parentJoystickChanged(_joystickManager->activeJoystick());
+    }
     _setStickPositions();
     _resetInternalCalibrationValues();
     _currentStickPositions  << _sticksCentered.leftX  << _sticksCentered.leftY  << _sticksCentered.rightX  << _sticksCentered.rightY;
@@ -107,17 +116,21 @@ void JoystickConfigController::start(void)
 
 void JoystickConfigController::setDeadbandValue(int axis, int value)
 {
+    // Paranoid check
+    if (_parentJoystick == nullptr) {
+        qCWarning(JoystickConfigControllerLog) << "Warning, parentJoystick is nullptr";
+        return;
+    }
     _axisDeadbandChanged(axis,value);
-    Joystick* joystick = _joystickManager->activeJoystick();
-    Joystick::Calibration_t calibration = joystick->getCalibration(axis);
+    Joystick::Calibration_t calibration = _parentJoystick->getCalibration(axis);
     calibration.deadband = value;
-    joystick->setCalibration(axis,calibration);
+    _parentJoystick->setCalibration(axis,calibration);
 }
 
 JoystickConfigController::~JoystickConfigController()
 {
-    if(_activeJoystick) {
-        _activeJoystick->setCalibrationMode(false);
+    if(_parentJoystick) {
+        _parentJoystick->setCalibrationMode(false);
     }
 }
 
@@ -169,6 +182,11 @@ const JoystickConfigController::stateMachineEntry* JoystickConfigController::_ge
 
 void JoystickConfigController::_advanceState()
 {
+    // Paranoid check
+    if (_parentJoystick == nullptr) {
+        qCWarning(JoystickConfigControllerLog) << "Warning, parentJoystick is nullptr";
+        return;
+    }
     _currentStep++;
 #if ENABLE_GIMBAL
     // TODO There are no MAVLink messages to handle gimbal from this
@@ -178,7 +196,7 @@ void JoystickConfigController::_advanceState()
         //-- No channels for gimbal
         _advanceState();
     }
-    if((state->channelID == 4 || state->channelID == 5) && !_activeJoystick->gimbalEnabled()) {
+    if((state->channelID == 4 || state->channelID == 5) && !_parentJoystick->gimbalEnabled()) {
         //-- Gimbal disabled. Skip it.
         _advanceState();
     }
@@ -280,11 +298,21 @@ void JoystickConfigController::cancelButtonClicked(void)
 }
 
 bool JoystickConfigController::getDeadbandToggle() {
-    return _activeJoystick->deadband();
+    // Paranoid check
+    if (_parentJoystick == nullptr) {
+        qCWarning(JoystickConfigControllerLog) << "Warning, parentJoystick is nullptr";
+        return false;
+    }
+    return _parentJoystick->deadband();
 }
 
 void JoystickConfigController::setDeadbandToggle(bool deadband) {
-    _activeJoystick->setDeadband(deadband);
+    // Paranoid check
+    if (_parentJoystick == nullptr) {
+        qCWarning(JoystickConfigControllerLog) << "Warning, parentJoystick is nullptr";
+        return;
+    }
+    _parentJoystick->setDeadband(deadband);
     _signalAllAttitudeValueChanges();
     emit deadbandToggled(deadband);
 }
@@ -314,8 +342,13 @@ void JoystickConfigController::_axisDeadbandChanged(int axis, int value)
 void JoystickConfigController::_inputCenterWaitBegin(Joystick::AxisFunction_t function, int axis, int value)
 {
     Q_UNUSED(function);
+    // Paranoid check
+    if (_parentJoystick == nullptr) {
+        qCWarning(JoystickConfigControllerLog) << "Warning, parentJoystick is nullptr";
+        return;
+    }
     //sensing deadband
-    if ((abs(value) * 1.1f > _rgAxisInfo[axis].deadband) && (_activeJoystick->deadband())) {   //add 10% on top of existing deadband
+    if ((abs(value) * 1.1f > _rgAxisInfo[axis].deadband) && (_parentJoystick->deadband())) {   //add 10% on top of existing deadband
         _axisDeadbandChanged(axis, static_cast<int>(abs(value) * 1.1f));
     }
     // FIXME: Doesn't wait for center
@@ -498,7 +531,11 @@ void JoystickConfigController::_resetInternalCalibrationValues()
 /// @brief Sets internal calibration values from the stored settings
 void JoystickConfigController::_setInternalCalibrationValuesFromSettings()
 {
-    Joystick* joystick = _joystickManager->activeJoystick();
+    // Paranoid check
+    if (_parentJoystick == nullptr) {
+        qCWarning(JoystickConfigControllerLog) << "Warning, parentJoystick is nullptr";
+        return;
+    }
     // Initialize all function mappings to not set
     for (int i = 0; i < _axisCount; i++) {
         struct AxisInfo* info = &_rgAxisInfo[i];
@@ -511,26 +548,26 @@ void JoystickConfigController::_setInternalCalibrationValuesFromSettings()
     
     for (int axis = 0; axis < _axisCount; axis++) {
         struct AxisInfo* info = &_rgAxisInfo[axis];
-        Joystick::Calibration_t calibration = joystick->getCalibration(axis);
+        Joystick::Calibration_t calibration = _parentJoystick->getCalibration(axis);
         info->axisTrim  = calibration.center;
         info->axisMin   = calibration.min;
         info->axisMax   = calibration.max;
         info->reversed  = calibration.reversed;
         info->deadband  = calibration.deadband;
         emit axisDeadbandChanged(axis,info->deadband);
-        qCDebug(JoystickConfigControllerLog) << "Read settings name:axis:min:max:trim:reversed" << joystick->name() << axis << info->axisMin << info->axisMax << info->axisTrim << info->reversed;
+        qCDebug(JoystickConfigControllerLog) << "Read settings name:axis:min:max:trim:reversed" << _parentJoystick->name() << axis << info->axisMin << info->axisMax << info->axisTrim << info->reversed;
     }
     
     for (int function = 0; function < Joystick::maxFunction; function++) {
         int paramAxis;
-        paramAxis = joystick->getFunctionAxis(static_cast<Joystick::AxisFunction_t>(function));
+        paramAxis = _parentJoystick->getFunctionAxis(static_cast<Joystick::AxisFunction_t>(function));
         if(paramAxis >= 0 && paramAxis < _axisCount) {
             _rgFunctionAxisMapping[function] = paramAxis;
             _rgAxisInfo[paramAxis].function = static_cast<Joystick::AxisFunction_t>(function);
         }
     }
 
-    _transmitterMode = joystick->getTXMode();
+    _transmitterMode = _parentJoystick->getTXMode();
     _signalAllAttitudeValueChanges();
 }
 
@@ -572,7 +609,11 @@ void JoystickConfigController::_validateCalibration()
 /// @brief Saves the rc calibration values to the board parameters.
 void JoystickConfigController::_writeCalibration()
 {
-    Joystick* joystick = _joystickManager->activeJoystick();
+    // Paranoid check
+    if (_parentJoystick == nullptr) {
+        qCWarning(JoystickConfigControllerLog) << "Warning, parentJoystick is nullptr";
+        return;
+    }    
     _validateCalibration();
     
     for (int axis = 0; axis < _axisCount; axis++) {
@@ -583,12 +624,15 @@ void JoystickConfigController::_writeCalibration()
         calibration.max         = info->axisMax;
         calibration.reversed    = info->reversed;
         calibration.deadband    = info->deadband;
-        joystick->setCalibration(axis, calibration);
+        _parentJoystick->setCalibration(axis, calibration);
     }
     
-    // Write function mapping parameters
-    for (int function = 0; function < Joystick::maxFunction; function++) {
-        joystick->setFunctionAxis(static_cast<Joystick::AxisFunction_t>(function), _rgFunctionAxisMapping[function]);
+    // Write function mapping parameters. Depending on having gimbal control or not we have a different
+    // number of axis functions to set
+    int initialFunction = Joystick::rollFunction;
+    int finalFunction =   _parentJoystick->gimbalEnabled() ? Joystick::maxFunction : Joystick::gimbalPitchFunction;
+    for (int function = initialFunction; function < finalFunction; function++) {
+        _parentJoystick->setFunctionAxis(static_cast<Joystick::AxisFunction_t>(function), _rgFunctionAxisMapping[function]);
     }
     
     _stopCalibration();
@@ -604,7 +648,12 @@ void JoystickConfigController::_writeCalibration()
 /// @brief Starts the calibration process
 void JoystickConfigController::_startCalibration()
 {
-    _activeJoystick->setCalibrationMode(true);
+    // Paranoid check
+    if (_parentJoystick == nullptr) {
+        qCWarning(JoystickConfigControllerLog) << "Warning, parentJoystick is nullptr";
+        return;
+    }
+    _parentJoystick->setCalibrationMode(true);
     _resetInternalCalibrationValues();
     _currentStep = 0;
     _setupCurrentState();
@@ -614,8 +663,13 @@ void JoystickConfigController::_startCalibration()
 /// @brief Cancels the calibration process, setting things back to initial state.
 void JoystickConfigController::_stopCalibration()
 {
+    // Paranoid check
+    if (_parentJoystick == nullptr) {
+        qCWarning(JoystickConfigControllerLog) << "Warning, parentJoystick is nullptr";
+        return;
+    }
     _currentStep = -1;
-    _activeJoystick->setCalibrationMode(false);
+    _parentJoystick->setCalibrationMode(false);
     _setInternalCalibrationValuesFromSettings();
     _setStatusText("");
     emit calibratingChanged();
@@ -741,11 +795,16 @@ bool JoystickConfigController::gimbalYawAxisReversed()
 
 void JoystickConfigController::setTransmitterMode(int mode)
 {
+    // Paranoid check
+    if (_parentJoystick == nullptr) {
+        qCWarning(JoystickConfigControllerLog) << "Warning, parentJoystick is nullptr";
+        return;
+    }
     // Mode selection is disabled during calibration
     if (mode > 0 && mode <= 4 && _currentStep == -1) {
         _transmitterMode = mode;
         _setStickPositions();
-        _activeJoystick->setTXMode(mode);
+        _parentJoystick->setTXMode(mode);
         _setInternalCalibrationValuesFromSettings();
     }
 }
@@ -769,35 +828,35 @@ void JoystickConfigController::_signalAllAttitudeValueChanges()
     emit transmitterModeChanged(_transmitterMode);
 }
 
-void JoystickConfigController::_activeJoystickChanged(Joystick* joystick)
+void JoystickConfigController::_parentJoystickChanged(Joystick* joystick)
 {
     bool joystickTransition = false;
-    if (_activeJoystick) {
+    if (_parentJoystick) {
         joystickTransition = true;
-        disconnect(_activeJoystick, &Joystick::rawAxisValueChanged, this, &JoystickConfigController::_axisValueChanged);
+        disconnect(_parentJoystick, &Joystick::rawAxisValueChanged, this, &JoystickConfigController::_axisValueChanged);
         // This will reset _rgFunctionAxis values to -1 to prevent out-of-bounds accesses
         _resetInternalCalibrationValues();
         delete[] _rgAxisInfo;
         delete[] _axisValueSave;
         delete[] _axisRawValue;
         _axisCount = 0;
-        _activeJoystick = nullptr;
+        _parentJoystick = nullptr;
         emit hasGimbalPitchChanged();
         emit hasGimbalYawChanged();
     }
     
     if (joystick) {
-        _activeJoystick = joystick;
+        _parentJoystick = joystick;
         if (joystickTransition) {
             _stopCalibration();
         }
-        _activeJoystick->setCalibrationMode(false);
-        _axisCount      = _activeJoystick->axisCount();
+        _parentJoystick->setCalibrationMode(false);
+        _axisCount      = _parentJoystick->axisCount();
         _rgAxisInfo     = new struct AxisInfo[_axisCount];
         _axisValueSave  = new int[_axisCount];
         _axisRawValue   = new int[_axisCount];
         _setInternalCalibrationValuesFromSettings();
-        connect(_activeJoystick, &Joystick::rawAxisValueChanged, this, &JoystickConfigController::_axisValueChanged);
+        connect(_parentJoystick, &Joystick::rawAxisValueChanged, this, &JoystickConfigController::_axisValueChanged);
         emit hasGimbalPitchChanged();
         emit hasGimbalYawChanged();
     }
