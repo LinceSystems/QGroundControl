@@ -175,6 +175,7 @@ void JoystickManager::setActiveJoystick(Joystick* joystick)
     }
 
     if (_activeJoystick) {
+        qCDebug(JoystickManagerLog) << "Stop polling active primary Joystick: " << _activeJoystick->name() << " Because of setActiveJoystick";
         _activeJoystick->stopPolling();
     }
 
@@ -205,6 +206,7 @@ void JoystickManager::setActiveJoystickSecondary(Joystick* joystick)
     }
 
     if (_activeJoystickSecondary) {
+        qCDebug(JoystickManagerLog) << "Stop polling active secondary Joystick: " << _activeJoystickSecondary->name() << " Because of setActiveJoystick";
         _activeJoystickSecondary->stopPolling();
     }
 
