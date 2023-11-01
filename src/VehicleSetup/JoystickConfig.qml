@@ -35,7 +35,7 @@ SetupPage {
     _disableDueToArmed: globals.activeVehicle ? globals.activeVehicle.armed : false
     
     // This property enables reusing this menu and all its childs for different joysticks
-    property var isSecondary: false
+    property bool isSecondary: false
 
     Connections {
         target: joystickManager
