@@ -1024,6 +1024,7 @@ void Joystick::setCalibrationMode(bool calibrating)
         startPolling(_multiVehicleManager->activeVehicle());
     }
     else if (_pollingStartedForCalibration) {
+        qCDebug(JoystickLog) << "SetCalibrationMode(false), stopping polling because _pollingStartedForCalibration is true";
         stopPolling();
     }
 }
