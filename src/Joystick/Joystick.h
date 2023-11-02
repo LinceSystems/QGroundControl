@@ -124,6 +124,7 @@ public:
     // Property accessors
 
     QString     name                () { return _name; }
+    bool        calibrated          () const{ return _calibrated; }
     int         totalButtonCount    () const{ return _totalButtonCount; }
     int         axisCount           () const{ return _axisCount; }
     bool        mainControlEnabled  () const{ return _mainControlEnabled; }
