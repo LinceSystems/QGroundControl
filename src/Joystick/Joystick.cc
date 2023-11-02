@@ -777,8 +777,8 @@ void Joystick::stopPolling(void)
             disconnect(this, &Joystick::gripperAction,      _activeVehicle, &Vehicle::setGripperAction);
             disconnect(_activeVehicle, &Vehicle::flightModesChanged, this, &Joystick::_flightModesChanged);
         }
-        _exitThread = true;
     }
+    _exitThread = true;
 }
 
 void Joystick::setCalibration(int axis, Calibration_t& calibration)
