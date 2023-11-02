@@ -280,7 +280,7 @@ Rectangle {
                 setupIndicator:     true
                 setupComplete:      _activeJoystick ? _activeJoystick.calibrated || _buttonsOnly : false
                 exclusiveGroup:     setupButtonGroup
-                visible:            _fullParameterVehicleAvailable && joystickManager.joysticks.length > 1
+                visible:            _fullParameterVehicleAvailable && joystickManager.joysticks.length !== 0 && joystickManager.activeJoystickSecondary
                 text:               _forcedToButtonsOnly ? qsTr("Secondary Buttons") : qsTr("Secondary Joystick")
                 Layout.fillWidth:   true
                 
