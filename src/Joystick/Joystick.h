@@ -102,6 +102,7 @@ public:
     Q_PROPERTY(QStringList assignableActionTitles       READ assignableActionTitles     NOTIFY      assignableActionsChanged)
     Q_PROPERTY(QString  disabledActionName              READ disabledActionName         CONSTANT)
 
+    Q_PROPERTY(bool     mainControlEnabled      READ mainControlEnabled     WRITE setMainControlEnabled NOTIFY mainControlEnabledChanged )
     Q_PROPERTY(bool     gimbalEnabled           READ gimbalEnabled          WRITE setGimbalEnabled      NOTIFY gimbalEnabledChanged)
     Q_PROPERTY(int      throttleMode            READ throttleMode           WRITE setThrottleMode       NOTIFY throttleModeChanged)
     Q_PROPERTY(float    axisFrequencyHz         READ axisFrequencyHz        WRITE setAxisFrequency      NOTIFY axisFrequencyHzChanged)
@@ -125,6 +126,7 @@ public:
     QString     name                () { return _name; }
     int         totalButtonCount    () const{ return _totalButtonCount; }
     int         axisCount           () const{ return _axisCount; }
+    bool        mainControlEnabled  () const{ return _mainControlEnabled; }
     bool        gimbalEnabled       () const{ return _gimbalEnabled; }
     QStringList buttonActions       ();
 
@@ -133,6 +135,7 @@ public:
     QString     disabledActionName          () { return _buttonActionNone; }
 
     void setGimbalEnabled           (bool set);
+    void setMainControlEnabled      (bool set);
 
     /// Start the polling thread which will in turn emit joystick signals
     void startPolling(Vehicle* vehicle);
@@ -203,6 +206,7 @@ signals:
     void circleCorrectionChanged    (bool circleCorrection);
     void axisValues                 (float roll, float pitch, float yaw, float throttle, float gimbalPitch, float gimbalYaw);
 
+    void mainControlEnabledChanged  ();
     void gimbalEnabledChanged       ();
     void axisFrequencyHzChanged       ();
     void buttonFrequencyHzChanged     ();
@@ -288,6 +292,7 @@ protected:
     float   _axisFrequencyHz        = _defaultAxisFrequencyHz;
     float   _buttonFrequencyHz      = _defaultButtonFrequencyHz;
     Vehicle* _activeVehicle         = nullptr;
+    bool    _mainControlEnabled     = true;
     bool    _gimbalEnabled          = false;
 
     bool    _pollingStartedForCalibration = false;
@@ -337,6 +342,7 @@ private:
     static const char* _roverTXModeSettingsKey;
     static const char* _vtolTXModeSettingsKey;
     static const char* _submarineTXModeSettingsKey;
+    static const char* _mainControlEnabledSettingsKey;
     static const char* _gimbalEnabledSettingsKey;
 
     static const char* _buttonActionNone;

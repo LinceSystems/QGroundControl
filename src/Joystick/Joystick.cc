@@ -40,6 +40,7 @@ const char* Joystick::_multiRotorTXModeSettingsKey =    "TXMode_MultiRotor";
 const char* Joystick::_roverTXModeSettingsKey =         "TXMode_Rover";
 const char* Joystick::_vtolTXModeSettingsKey =          "TXMode_VTOL";
 const char* Joystick::_submarineTXModeSettingsKey =     "TXMode_Submarine";
+const char* Joystick::_mainControlEnabledSettingsKey =  "MainControlEnabled";
 const char* Joystick::_gimbalEnabledSettingsKey =       "GimbalEnabled";
 
 const char* Joystick::_buttonActionNone =               QT_TR_NOOP("No Action");
@@ -262,6 +263,7 @@ void Joystick::_loadSettings()
     _buttonFrequencyHz  = settings.value(_buttonFrequencySettingsKey,   _defaultButtonFrequencyHz).toFloat();
     _circleCorrection   = settings.value(_circleCorrectionSettingsKey,  false).toBool();
     _negativeThrust     = settings.value(_negativeThrustSettingsKey,    false).toBool();
+    _mainControlEnabled = settings.value(_mainControlEnabledSettingsKey,true).toBool();
     _gimbalEnabled      = settings.value(_gimbalEnabledSettingsKey,     false).toBool();
 
     _throttleMode   = static_cast<ThrottleMode_t>(settings.value(_throttleModeSettingsKey, ThrottleModeDownZero).toInt(&convertOk));
@@ -367,6 +369,7 @@ void Joystick::_saveSettings()
     settings.setValue(_buttonFrequencySettingsKey,  _buttonFrequencyHz);
     settings.setValue(_throttleModeSettingsKey,     _throttleMode);
     settings.setValue(_negativeThrustSettingsKey,   _negativeThrust);
+    settings.setValue(_mainControlEnabledSettingsKey, _mainControlEnabled);
     settings.setValue(_gimbalEnabledSettingsKey,    _gimbalEnabled);
     settings.setValue(_circleCorrectionSettingsKey, _circleCorrection);
 
@@ -702,16 +705,19 @@ void Joystick::_handleAxis()
                 }
             }
 
-            uint16_t shortButtons = static_cast<uint16_t>(buttonPressedBits & 0xFFFF);
-            _activeVehicle->sendJoystickDataThreadSafe(roll, pitch, yaw, throttle, shortButtons);
-            
-            // This is to notify QML joystick display
-            emit axisValues(roll, pitch, yaw, throttle, gimbalPitch, gimbalYaw);
+            // This allows using a joystick just for gimbal control, or just allowing buttons
+            if (_activeVehicle && _mainControlEnabled) {
+                uint16_t shortButtons = static_cast<uint16_t>(buttonPressedBits & 0xFFFF);
+                _activeVehicle->sendJoystickDataThreadSafe(roll, pitch, yaw, throttle, shortButtons);
+            }
 
-            if(_activeVehicle && _axisCount > 4 && _gimbalEnabled) {
+            if(_activeVehicle && _gimbalEnabled) {
                 // Here we handle the gimbal pitch and yaw sending action to vehicle
                 _activeVehicle->sendJoystickExtraDataThreadSafe(gimbalPitch, gimbalYaw);
             }
+            
+            // This is to notify QML joystick display
+            emit axisValues(roll, pitch, yaw, throttle, gimbalPitch, gimbalYaw);
         }
     }
 }
@@ -974,6 +980,13 @@ void Joystick::setCircleCorrection(bool circleCorrection)
     _circleCorrection = circleCorrection;
     _saveSettings();
     emit circleCorrectionChanged(_circleCorrection);
+}
+
+void Joystick::setMainControlEnabled(bool set)
+{
+    _mainControlEnabled = set;
+    _saveSettings();
+    emit mainControlEnabledChanged();
 }
 
 void Joystick::setGimbalEnabled(bool set)
