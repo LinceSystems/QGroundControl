@@ -182,7 +182,7 @@ void JoystickManager::setActiveJoystick(Joystick* joystick)
     _activeJoystick = joystick;
 
     if (_activeJoystick != nullptr) {
-        qCDebug(JoystickManagerLog) << "Set active:" << _activeJoystick->name();
+        qCDebug(JoystickManagerLog) << "Setting active Joystick in settings:" << _activeJoystick->name();
 
         settings.beginGroup(_settingsGroup);
         settings.setValue(_settingsKeyActiveJoystick, _activeJoystick->name());
@@ -213,7 +213,7 @@ void JoystickManager::setActiveJoystickSecondary(Joystick* joystick)
     _activeJoystickSecondary = joystick;
 
     if (_activeJoystickSecondary != nullptr) {
-        qCDebug(JoystickManagerLog) << "Set active secondary:" << _activeJoystickSecondary->name();
+        qCDebug(JoystickManagerLog) << "Set active Secondary Joystick in settings:" << _activeJoystickSecondary->name();
 
         settings.beginGroup(_settingsGroup);
         settings.setValue(_settingsKeyActiveJoystickSecondary, _activeJoystickSecondary->name());
