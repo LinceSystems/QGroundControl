@@ -39,6 +39,8 @@ public:
     Q_PROPERTY(Joystick* activeJoystickSecondary READ activeJoystickSecondary WRITE setActiveJoystickSecondary NOTIFY activeJoystickSecondaryChanged)
     Q_PROPERTY(QString activeJoystickSecondaryName READ activeJoystickSecondaryName WRITE setActiveJoystickSecondaryName NOTIFY activeJoystickSecondaryNameChanged)
 
+    Q_PROPERTY(bool multiJoystickConfigOk READ multiJoystickConfigOk NOTIFY multiJoystickConfigOkChanged)
+    
     /// List of available joysticks
     QVariantList joysticks();
     /// List of available joystick names
@@ -60,6 +62,8 @@ public:
     QString activeJoystickSecondaryName(void);
     bool setActiveJoystickSecondaryName(const QString& name);
 
+    bool multiJoystickConfigOk() { return _multiJoystickConfigOk; }
+
     void restartJoystickCheckTimer(void);
 
     // Override from QGCTool
@@ -67,6 +71,7 @@ public:
 
 public slots:
     void init();
+    void evaluateMultiJoystickConfigOk();
 
 signals:
     void activeJoystickChanged(Joystick* joystick);
@@ -75,6 +80,7 @@ signals:
     void activeJoystickSecondaryNameChanged(const QString& name);
     void availableJoysticksChanged(void);
     void updateAvailableJoysticksSignal();
+    void multiJoystickConfigOkChanged();
 
 private slots:
     void _updateAvailableJoysticks(void);
@@ -94,4 +100,6 @@ private:
 
     int _joystickCheckTimerCounter;
     QTimer _joystickCheckTimer;
+
+    bool _multiJoystickConfigOk = false;
 };

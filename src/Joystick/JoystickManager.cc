@@ -175,6 +175,11 @@ void JoystickManager::setActiveJoystick(Joystick* joystick)
     }
 
     if (_activeJoystick) {
+        // Disconnect this, as we are not longer interested on the status of the no longer active Joystick
+        disconnect(_activeJoystick, &Joystick::calibratedChanged, this, &JoystickManager::evaluateMultiJoystickConfigOk);
+        disconnect(_activeJoystick, &Joystick::mainControlEnabledChanged, this, &JoystickManager::evaluateMultiJoystickConfigOk);
+        disconnect(_activeJoystick, &Joystick::gimbalEnabledChanged, this, &JoystickManager::evaluateMultiJoystickConfigOk);
+
         qCDebug(JoystickManagerLog) << "Stop polling active primary Joystick: " << _activeJoystick->name() << " Because of setActiveJoystick";
         _activeJoystick->stopPolling();
     }
@@ -186,10 +191,17 @@ void JoystickManager::setActiveJoystick(Joystick* joystick)
 
         settings.beginGroup(_settingsGroup);
         settings.setValue(_settingsKeyActiveJoystick, _activeJoystick->name());
+
+        // connect signals to evaluate automatically the multi joystick config state
+        connect(_activeJoystick, &Joystick::calibratedChanged, this, &JoystickManager::evaluateMultiJoystickConfigOk);
+        connect(_activeJoystick, &Joystick::mainControlEnabledChanged, this, &JoystickManager::evaluateMultiJoystickConfigOk);
+        connect(_activeJoystick, &Joystick::gimbalEnabledChanged, this, &JoystickManager::evaluateMultiJoystickConfigOk);
     }
 
     emit activeJoystickChanged(_activeJoystick);
     emit activeJoystickNameChanged(_activeJoystick?_activeJoystick->name():"");
+    
+    evaluateMultiJoystickConfigOk();
 }
 
 void JoystickManager::setActiveJoystickSecondary(Joystick* joystick)
@@ -206,6 +218,11 @@ void JoystickManager::setActiveJoystickSecondary(Joystick* joystick)
     }
 
     if (_activeJoystickSecondary) {
+        // Disconnect this, as we are not longer interested on the status of the no longer active Joystick
+        disconnect(_activeJoystickSecondary, &Joystick::calibratedChanged, this, &JoystickManager::evaluateMultiJoystickConfigOk);
+        disconnect(_activeJoystickSecondary, &Joystick::mainControlEnabledChanged, this, &JoystickManager::evaluateMultiJoystickConfigOk);
+        disconnect(_activeJoystickSecondary, &Joystick::gimbalEnabledChanged, this, &JoystickManager::evaluateMultiJoystickConfigOk);
+
         qCDebug(JoystickManagerLog) << "Stop polling active secondary Joystick: " << _activeJoystickSecondary->name() << " Because of setActiveJoystick";
         _activeJoystickSecondary->stopPolling();
     }
@@ -217,10 +234,17 @@ void JoystickManager::setActiveJoystickSecondary(Joystick* joystick)
 
         settings.beginGroup(_settingsGroup);
         settings.setValue(_settingsKeyActiveJoystickSecondary, _activeJoystickSecondary->name());
+
+        // connect signals to evaluate automatically the multi joystick config state
+        connect(_activeJoystickSecondary, &Joystick::calibratedChanged, this, &JoystickManager::evaluateMultiJoystickConfigOk);
+        connect(_activeJoystickSecondary, &Joystick::mainControlEnabledChanged, this, &JoystickManager::evaluateMultiJoystickConfigOk);
+        connect(_activeJoystickSecondary, &Joystick::gimbalEnabledChanged, this, &JoystickManager::evaluateMultiJoystickConfigOk);
     }
 
     emit activeJoystickSecondaryChanged(_activeJoystickSecondary);
     emit activeJoystickSecondaryNameChanged(_activeJoystickSecondary?_activeJoystickSecondary->name():"");
+    
+    evaluateMultiJoystickConfigOk();
 }
 
 QVariantList JoystickManager::joysticks(void)
@@ -247,6 +271,48 @@ QString JoystickManager::activeJoystickName(void)
 QString JoystickManager::activeJoystickSecondaryName(void)
 {
     return _activeJoystickSecondary ? _activeJoystickSecondary->name() : QString();
+}
+
+void JoystickManager::evaluateMultiJoystickConfigOk(void)
+{
+    bool multiJoystickConfigOk = true;
+    bool primaryNull           = (_activeJoystick == nullptr);
+    bool secondaryNull         = (_activeJoystickSecondary == nullptr);
+    
+    if (!primaryNull) {
+        if (!_activeJoystick->calibrated() && (_activeJoystick->mainControlEnabled() || _activeJoystick->gimbalEnabled()) ) {
+            qCDebug(JoystickManagerLog) << "multiJoystickConfigOk: false, active joystick is not calibrated and has main or gimbal control enabled";
+            multiJoystickConfigOk = false;
+        }
+    }
+
+    // Only enter here if config is still good
+    if (multiJoystickConfigOk && !secondaryNull) {
+        if (!_activeJoystickSecondary->calibrated() && (_activeJoystickSecondary->mainControlEnabled() || _activeJoystickSecondary->gimbalEnabled()) ) {
+            qCDebug(JoystickManagerLog) << "multiJoystickConfigOk: false, active secondary joystick is not calibrated and has main or gimbal control enabled";
+            multiJoystickConfigOk = false;
+        }
+    }
+
+    // Only enter here if config is still good
+    if (multiJoystickConfigOk && !primaryNull && !secondaryNull) {
+        // Check if primary and secondary are the same and not nullptr
+        if (_activeJoystick == _activeJoystickSecondary) {
+            qCDebug(JoystickManagerLog) << "multiJoystickConfigOk: false, primary and secondary joysticks are the same";
+            multiJoystickConfigOk = false;
+        
+        } else if (_activeJoystick->mainControlEnabled() && _activeJoystickSecondary->mainControlEnabled()) {
+            qCDebug(JoystickManagerLog) << "multiJoystickConfigOk: false, both joysticks have main control enabled";
+            multiJoystickConfigOk = false;
+        
+        } else if (_activeJoystick->gimbalEnabled() && _activeJoystickSecondary->gimbalEnabled()) {
+            qCDebug(JoystickManagerLog) << "multiJoystickConfigOk: false, both joysticks have gimbal control enabled";
+            multiJoystickConfigOk = false;
+        }
+    }
+
+    _multiJoystickConfigOk = multiJoystickConfigOk;
+    emit multiJoystickConfigOkChanged();
 }
 
 bool JoystickManager::setActiveJoystickName(const QString& name)
