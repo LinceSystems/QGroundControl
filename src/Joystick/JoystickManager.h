@@ -69,6 +69,8 @@ public:
     // Override from QGCTool
     virtual void setToolbox(QGCToolbox *toolbox);
 
+    Q_INVOKABLE void resetJoystickPrimarySecondarySettings();
+
 public slots:
     void init();
     void evaluateMultiJoystickConfigOk();

@@ -409,3 +409,12 @@ void JoystickManager::restartJoystickCheckTimer()
     _joystickCheckTimerCounter = 5;
     _joystickCheckTimer.start(1000);
 }
+
+void JoystickManager::resetJoystickPrimarySecondarySettings()
+{
+    QSettings settings;
+    settings.beginGroup(_settingsGroup);
+    settings.setValue(_settingsKeyActiveJoystick, "");
+    settings.setValue(_settingsKeyActiveJoystickSecondary, "");
+    _setActiveJoysticksFromSettings();
+}
