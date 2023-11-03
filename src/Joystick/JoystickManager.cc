@@ -115,39 +115,71 @@ void JoystickManager::_setActiveJoysticksFromSettings(void)
     }
 
     QSettings settings;
-
     settings.beginGroup(_settingsGroup);
-    QString name = settings.value(_settingsKeyActiveJoystick).toString();
 
+    // First read the settings for active joystick
+    QString name = settings.value(_settingsKeyActiveJoystick).toString();
+    qCDebug(JoystickManagerLog) << "Checking if we have primary joystick in settings ...";
+    // If we don't have settings ( first boot, or never before a joystick was connected ), use first in the list
     if (name.isEmpty()) {
+        qCDebug(JoystickManagerLog) << "Primary joystick not set in settings, using first in the connected devices list: " << _name2JoystickMap.first()->name();
         name = _name2JoystickMap.first()->name();
+    // If se have it in settings, try to use that instead
+    } else {
+        qCDebug(JoystickManagerLog) << "Primary joystick present in settings, using it: " << name;
     }
-    // Set by default active joystick to first joystick, if not found in settings
-    setActiveJoystick(_name2JoystickMap.value(name, _name2JoystickMap.first()));
+
+    qCDebug(JoystickManagerLog) << "About to set Active joystick to: " << name << ", is it connected? Available joysticks: " << _name2JoystickMap.contains(name);
+    // We would be here if the primary joystick we had in settings is connected, or if we didn't have any joystick in settings but we have one connected now
+    if (_name2JoystickMap.contains(name)) { 
+        qCDebug(JoystickManagerLog) << ("It is connected, setting active Joystick to: " + name);
+        setActiveJoystick(_name2JoystickMap.value(name));
+    // We would be here if the primary joystick we had in settings is not connected
+    } else {
+        qCDebug(JoystickManagerLog) << ("It is not connected, setting to first in the list: " + _name2JoystickMap.first()->name());
+        setActiveJoystick(_name2JoystickMap.first());
+        // We move the setting of the previous Primary to secondary. If for some reason we happen to have a second
+        // joystick connected anyway, this setting will be fixed at the end of this function.
+        qCDebug(JoystickManagerLog) << "And saving former primary as secondary: " << name;
+        settings.setValue(_settingsKeyActiveJoystickSecondary, name);
+    }
+    // Save the settings so it persists reboots
     settings.setValue(_settingsKeyActiveJoystick, _activeJoystick->name());
 
     // Only proceed here if we have more than 1 joystick
     if (_name2JoystickMap.count() <= 1) {
+        // But We could be here also if we disconnect first joystick, second joystick would be set as active by the block above, so we
+        // would have a situation where primary and secondary are the same. If this is the case, set active joystick secondary to null before proceeding
+        if (_activeJoystick != nullptr && _activeJoystick == _activeJoystickSecondary) {
+            qCDebug(JoystickManagerLog) << "Secondary joystick moved to primary. Removing reference to secondary one so they don't point to the same joystick...";
+            setActiveJoystickSecondary(nullptr);
+        }
         return;
     }
 
+    // Get the secondary joystick name in settings
     QString nameSecondary = settings.value(_settingsKeyActiveJoystickSecondary).toString();
-    QList name2JoystickMapKeys = _name2JoystickMap.keys();
     
-    // By default joystick secondary is second joystick, if not found in settings
+    // If we don't have settings ( first boot, or never before a joystick was connected ), use second in the list
     if (nameSecondary.isEmpty()) {
-        // Assign to second value
+        QList name2JoystickMapKeys = _name2JoystickMap.keys();
+        qCDebug(JoystickManagerLog) << "Secondary joystick not set in settings, using second in the connected devices list: " << name2JoystickMapKeys.value(qint64(1));
         nameSecondary = name2JoystickMapKeys.value(qint64(1));
+    } else {
+        qCDebug(JoystickManagerLog) << "Secondary joystick settings available, trying to use: " << nameSecondary;
     }
 
+    qCDebug(JoystickManagerLog) << "About to set Secondary Active joystick to: " << nameSecondary << ", is it presesent on our map? : " << _name2JoystickMap.contains(nameSecondary);
+    qCDebug(JoystickManagerLog) << "Our map is: " << _name2JoystickMap;
     setActiveJoystickSecondary(_name2JoystickMap.value(nameSecondary));
     // Paranoid check, if for some reason code above is changed and we get something wrong,
     // _activeJoystickSecondary could be nullptr, and it would crash when accesing it
     if (!_activeJoystickSecondary) {
-        qCDebug(JoystickManagerLog) << "active joystick secondary is null";
+        qCDebug(JoystickManagerLog) << "active joystick secondary is null, not saving in settings";
         setActiveJoystickSecondary(nullptr);
         return;
     }
+    qCDebug(JoystickManagerLog) << "active joystick secondary set up correctly, saving in settings: " << _activeJoystickSecondary->name();
     settings.setValue(_settingsKeyActiveJoystickSecondary, _activeJoystickSecondary->name());
 }
 
@@ -300,6 +332,8 @@ void JoystickManager::evaluateMultiJoystickConfigOk(void)
         if (_activeJoystick == _activeJoystickSecondary) {
             qCDebug(JoystickManagerLog) << "multiJoystickConfigOk: false, primary and secondary joysticks are the same";
             multiJoystickConfigOk = false;
+            // If they are the same, the call to this function will reorganize them, and move secondary to primary. Then it will call to evaluate it all again in joystick/secondaryChanged
+            _setActiveJoysticksFromSettings();
         
         } else if (_activeJoystick->mainControlEnabled() && _activeJoystickSecondary->mainControlEnabled()) {
             qCDebug(JoystickManagerLog) << "multiJoystickConfigOk: false, both joysticks have main control enabled";
