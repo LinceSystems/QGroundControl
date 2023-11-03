@@ -25,7 +25,7 @@ import QGroundControl.FactControls  1.0
 SetupPage {
     id:                 joystickPage
     pageComponent:      pageComponent
-    pageName:           qsTr("Joystick")
+    pageName:           ( isSecondary ? qsTr("Secondary") : qsTr("Primary") ) + " " + qsTr("Joystick")
     pageDescription:    "" // qsTr("Joystick Setup is used to configure and calibrate joysticks.")
 
     readonly property real  _maxButtons:         64
