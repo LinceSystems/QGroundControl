@@ -186,6 +186,8 @@ Vehicle::Vehicle(LinkInterface*             link,
     _linkManager = _toolbox->linkManager();
 
     connect(_joystickManager, &JoystickManager::activeJoystickChanged, this, &Vehicle::_loadJoystickSettings);
+    connect(_joystickManager, &JoystickManager::activeJoystickSecondaryChanged, this, &Vehicle::_loadJoystickSettings);
+    
     connect(qgcApp()->toolbox()->multiVehicleManager(), &MultiVehicleManager::activeVehicleChanged, this, &Vehicle::_activeVehicleChanged);
 
     _mavlink = _toolbox->mavlinkProtocol();
@@ -2121,12 +2123,17 @@ void Vehicle::resetErrorLevelMessages()
 // this function called in three cases:
 // 1. On constructor of vehicle, to see if we should enable a joystick
 // 2. When there is a new active joystick
-// 3. When the active joystick is disconnected (even if there isnt a new one)
+// 3. When there is a new active secondary joystick
+// 4. When the active joystick is disconnected (even if there isnt a new one)
+// 5. When the active secondary joystick is disconnected (even if there isnt a new one)
 void Vehicle::_loadJoystickSettings()
 {
     QSettings settings;
     settings.beginGroup(QString(_settingsGroup).arg(_id));
 
+    // JoystickManager takes care of not allowing the situation where we have secondary but not primary joystick
+    // to happen, so we only need to check for primary here. If for some reason we have secondary but not primary
+    // JoystickManager will move secondary to primary
     if (_toolbox->joystickManager()->activeJoystick()) {
         qCDebug(JoystickLog) << "Vehicle " << this->id() << " Notified of an active joystick. Loading setting joystickenabled: " << settings.value(_joystickEnabledSettingsKey, false).toBool();
         setJoystickEnabled(settings.value(_joystickEnabledSettingsKey, false).toBool());
@@ -2168,8 +2175,8 @@ void Vehicle::setJoystickEnabled(bool enabled)
     // _joystickEnabled is the runtime state - it determines whether a vehicle is using joystick data when it is active
     _joystickEnabled = enabled;
 
-    // if we are the active vehicle, call start polling on the active joystick
-    // This routes the joystick signals to this vehicle
+    // if we are the active vehicle, call start polling on the active joysticks
+    // This routes the joysticks signals to this vehicle
     if (enabled && _toolbox->multiVehicleManager()->activeVehicle() == this){
         _captureJoystick();
     }
@@ -2189,12 +2196,20 @@ void Vehicle::_activeVehicleChanged(Vehicle *newActiveVehicle)
 }
 
 // tells the active joystick where to send data
+// It is important to capture both joysticks here
 void Vehicle::_captureJoystick()
 {
     Joystick* joystick = _joystickManager->activeJoystick();
 
     if(joystick){
         qCDebug(JoystickLog) << "Vehicle " << this->id() << " Capture Joystick" << joystick->name();
+        joystick->startPolling(this);
+    }
+
+    joystick = _joystickManager->activeJoystickSecondary();
+
+    if(joystick){
+        qCDebug(JoystickLog) << "Vehicle " << this->id() << " Capture secondary Joystick" << joystick->name();
         joystick->startPolling(this);
     }
 }
@@ -4451,6 +4466,11 @@ void Vehicle::sendJoystickDataThreadSafe(float roll, float pitch, float yaw, flo
         return;
     }
 
+    // This prevents sending potentially conflicting joystick commands
+    if (!_toolbox->joystickManager()->multiJoystickConfigOk()) {
+        return;
+    }
+
     mavlink_message_t message;
 
     // Incoming values are in the range -1:1
@@ -4488,6 +4508,11 @@ void Vehicle::sendJoystickExtraDataThreadSafe (float gimbalPitch, float gimbalYa
     }
 
     if (sharedLink->linkConfiguration()->isHighLatency()) {
+        return;
+    }
+
+    // This prevents sending potentially conflicting joystick commands
+    if (!_toolbox->joystickManager()->multiJoystickConfigOk()) {
         return;
     }
 
