@@ -2153,6 +2153,11 @@ void Vehicle::saveJoystickSettings()
     // The joystick enabled setting should only be changed if a joystick is present
     // since the checkbox can only be clicked if one is present
     if (_toolbox->joystickManager()->joysticks().count()) {
+        if (!_toolbox->joystickManager()->multiJoystickConfigOk()) {
+            qCDebug(JoystickLog) << "Vehicle " << this->id() << " saveJoystickSettings: multiJoystickConfig is not ok, setting joystickenabled = false";
+            _joystickEnabled = false;
+            emit joystickEnabledChanged(_joystickEnabled);
+        }
         qCDebug(JoystickLog) << "Vehicle " << this->id() << " Saving setting joystickenabled: " << _joystickEnabled;
         settings.setValue(_joystickEnabledSettingsKey, _joystickEnabled);
     }
