@@ -185,7 +185,7 @@ void Joystick::_setDefaultCalibration(void) {
     _axisFrequencyHz    = _defaultAxisFrequencyHz;
     _buttonFrequencyHz  = _defaultButtonFrequencyHz;
     _throttleMode       = ThrottleModeDownZero;
-    _calibrated         = true;
+    _calibrated         = false;
     _circleCorrection   = false;
 
     _saveSettings();
