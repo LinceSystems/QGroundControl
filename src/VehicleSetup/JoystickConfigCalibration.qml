@@ -205,7 +205,7 @@ Item {
             QGCButton {
                 id:         skipButton
                 text:       qsTr("Skip")
-                enabled:    controller.calibrating ? controller.skipEnabled : false
+                enabled:    controller.calibrating ? (controller.skipEnabled && !_activeJoystick.mainControlEnabled) : false
                 width:      ScreenTools.defaultFontPixelWidth * 10
                 onClicked:  controller.skipButtonClicked()
             }
