@@ -10,7 +10,6 @@ JoystickSDL::JoystickSDL(const QString& name, int axisCount, int buttonCount, in
     , _isGameController(isGameController)
     , _index(index)
 {
-    if(_isGameController) _setDefaultCalibration();
 }
 
 bool JoystickSDL::init(void) {
