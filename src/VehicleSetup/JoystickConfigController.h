@@ -209,6 +209,8 @@ private:
     void _inputStickMin         (Joystick::AxisFunction_t function, int axis, int value);
     void _inputCenterWait       (Joystick::AxisFunction_t function, int axis, int value);
 
+    void _skipCurrentStep       ();
+
     void _switchDetect          (Joystick::AxisFunction_t function, int axis, int value, bool moveToNextStep);
 
     void _saveFlapsDown         ();

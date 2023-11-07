@@ -158,15 +158,15 @@ const JoystickConfigController::stateMachineEntry* JoystickConfigController::_ge
     static const stateMachineEntry rgStateMachine[] = {
         //Function
         { Joystick::maxFunction,            msgBegin,           _sticksCentered,        stGimbalCentered,   &JoystickConfigController::_inputCenterWaitBegin,   &JoystickConfigController::_saveAllTrims,        nullptr, 0 },
-        { Joystick::throttleFunction,       msgThrottleUp,      _sticksThrottleUp,      stGimbalCentered,   &JoystickConfigController::_inputStickDetect,       nullptr,                                         nullptr, 0 },
-        { Joystick::throttleFunction,       msgThrottleDown,    _sticksThrottleDown,    stGimbalCentered,   &JoystickConfigController::_inputStickMin,          nullptr,                                         nullptr, 0 },
-        { Joystick::yawFunction,            msgYawRight,        _sticksYawRight,        stGimbalCentered,   &JoystickConfigController::_inputStickDetect,       nullptr,                                         nullptr, 1 },
-        { Joystick::yawFunction,            msgYawLeft,         _sticksYawLeft,         stGimbalCentered,   &JoystickConfigController::_inputStickMin,          nullptr,                                         nullptr, 1 },
-        { Joystick::rollFunction,           msgRollRight,       _sticksRollRight,       stGimbalCentered,   &JoystickConfigController::_inputStickDetect,       nullptr,                                         nullptr, 2 },
-        { Joystick::rollFunction,           msgRollLeft,        _sticksRollLeft,        stGimbalCentered,   &JoystickConfigController::_inputStickMin,          nullptr,                                         nullptr, 2 },
-        { Joystick::pitchFunction,          msgPitchUp,         _sticksPitchUp,         stGimbalCentered,   &JoystickConfigController::_inputStickDetect,       nullptr,                                         nullptr, 3 },
-        { Joystick::pitchFunction,          msgPitchDown,       _sticksPitchDown,       stGimbalCentered,   &JoystickConfigController::_inputStickMin,          nullptr,                                         nullptr, 3 },
-        { Joystick::pitchFunction,          msgPitchCenter,     _sticksCentered,        stGimbalCentered,   &JoystickConfigController::_inputCenterWait,        nullptr,                                         nullptr, 3 },
+        { Joystick::throttleFunction,       msgThrottleUp,      _sticksThrottleUp,      stGimbalCentered,   &JoystickConfigController::_inputStickDetect,       nullptr,                                         &JoystickConfigController::_skipCurrentStep, 0 },
+        { Joystick::throttleFunction,       msgThrottleDown,    _sticksThrottleDown,    stGimbalCentered,   &JoystickConfigController::_inputStickMin,          nullptr,                                         &JoystickConfigController::_skipCurrentStep, 0 },
+        { Joystick::yawFunction,            msgYawRight,        _sticksYawRight,        stGimbalCentered,   &JoystickConfigController::_inputStickDetect,       nullptr,                                         &JoystickConfigController::_skipCurrentStep, 1 },
+        { Joystick::yawFunction,            msgYawLeft,         _sticksYawLeft,         stGimbalCentered,   &JoystickConfigController::_inputStickMin,          nullptr,                                         &JoystickConfigController::_skipCurrentStep, 1 },
+        { Joystick::rollFunction,           msgRollRight,       _sticksRollRight,       stGimbalCentered,   &JoystickConfigController::_inputStickDetect,       nullptr,                                         &JoystickConfigController::_skipCurrentStep, 2 },
+        { Joystick::rollFunction,           msgRollLeft,        _sticksRollLeft,        stGimbalCentered,   &JoystickConfigController::_inputStickMin,          nullptr,                                         &JoystickConfigController::_skipCurrentStep, 2 },
+        { Joystick::pitchFunction,          msgPitchUp,         _sticksPitchUp,         stGimbalCentered,   &JoystickConfigController::_inputStickDetect,       nullptr,                                         &JoystickConfigController::_skipCurrentStep, 3 },
+        { Joystick::pitchFunction,          msgPitchDown,       _sticksPitchDown,       stGimbalCentered,   &JoystickConfigController::_inputStickMin,          nullptr,                                         &JoystickConfigController::_skipCurrentStep, 3 },
+        { Joystick::pitchFunction,          msgPitchCenter,     _sticksCentered,        stGimbalCentered,   &JoystickConfigController::_inputCenterWait,        nullptr,                                         &JoystickConfigController::_skipCurrentStep, 3 },
 #if ENABLE_GIMBAL
         { Joystick::gimbalPitchFunction,    msgGimbalPitchUp,   _sticksCentered,        stGimbalPitchUp,    &JoystickConfigController::_inputStickDetect,       nullptr,                                         nullptr, 4 },
         { Joystick::gimbalPitchFunction,    msgGimbalPitchDown, _sticksCentered,        stGimbalPitchDown,  &JoystickConfigController::_inputStickMin,          nullptr,                                         nullptr, 4 },
@@ -505,6 +505,11 @@ void JoystickConfigController::_inputCenterWait(Joystick::AxisFunction_t functio
             _advanceState();
         }
     }
+}
+
+void JoystickConfigController::_skipCurrentStep(void)
+{
+    _advanceState();
 }
 
 /// @brief Resets internal calibration values to their initial state in preparation for a new calibration sequence.
