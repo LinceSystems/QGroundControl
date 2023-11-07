@@ -739,7 +739,7 @@ void Joystick::startPolling(Vehicle* vehicle)
         // Always set up the new vehicle
         _activeVehicle = vehicle;
         // If joystick is not calibrated, disable it
-        if ( axisCount() != 0 && !_calibrated ) {
+        if ( axisCount() != 0 && !_calibrated && (_gimbalEnabled || _mainControlEnabled) ) {
             qCDebug(JoystickLog) << "Joystick: " << _name << "startPolling: setting joystick enabled to false on vehicle, because of not being calibrated";
             vehicle->setJoystickEnabled(false);
         }
