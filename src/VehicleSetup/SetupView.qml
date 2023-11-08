@@ -260,7 +260,7 @@ Rectangle {
                 id:                 joystickButton
                 imageResource:      "/qmlimages/Joystick.png"
                 setupIndicator:     true
-                setupComplete:      _activeJoystick ? _activeJoystick.calibrated || _buttonsOnly : false
+                setupComplete:      _activeJoystick ? _activeJoystick.calibrated || _buttonsOnly || (!_activeJoystick.gimbalEnabled && !_activeJoystick.mainControlEnabled) : false
                 exclusiveGroup:     setupButtonGroup
                 visible:            _fullParameterVehicleAvailable && joystickManager.joysticks.length !== 0
                 text:               _forcedToButtonsOnly ? 
@@ -278,7 +278,7 @@ Rectangle {
                 id:                 joystickSecondaryButton
                 imageResource:      "/qmlimages/Joystick.png"
                 setupIndicator:     true
-                setupComplete:      _activeJoystick ? _activeJoystick.calibrated || _buttonsOnly : false
+                setupComplete:      _activeJoystick ? _activeJoystick.calibrated || _buttonsOnly || (!_activeJoystick.gimbalEnabled && !_activeJoystick.mainControlEnabled) : false
                 exclusiveGroup:     setupButtonGroup
                 visible:            _fullParameterVehicleAvailable && joystickManager.joysticks.length !== 0 && joystickManager.activeJoystickSecondary
                 text:               _forcedToButtonsOnly ? qsTr("Secondary Buttons") : qsTr("Secondary Joystick")
