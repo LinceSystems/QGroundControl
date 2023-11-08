@@ -2186,6 +2186,9 @@ void Vehicle::setJoystickEnabled(bool enabled)
         _captureJoystick();
     }
 
+    // Whenever joystick enabled changes we want to save it in settings, and give it the chance to evaluate if it should refuse to enable it, if multi joystick config not ok
+    saveJoystickSettings();
+    // Now emit the signal, as saveJoystickSettings() could have modified _joystickEnabled if multi joystick config is not ok
     emit joystickEnabledChanged(_joystickEnabled);
 }
 
