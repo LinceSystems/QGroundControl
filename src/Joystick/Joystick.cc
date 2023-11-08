@@ -631,90 +631,95 @@ void Joystick::_handleAxis()
             emit rawAxisValueChanged(axisIndex, newAxisValue);
         }
         if (_activeVehicle->joystickEnabled() && !_calibrationMode && _calibrated) {
-            int     axis = _rgFunctionAxis[rollFunction];
-            float   roll = _adjustRange(_rgAxisValues[axis],    _rgCalibration[axis], _deadband);
 
-                    axis = _rgFunctionAxis[pitchFunction];
-            float   pitch = _adjustRange(_rgAxisValues[axis],   _rgCalibration[axis], _deadband);
-
-                    axis = _rgFunctionAxis[yawFunction];
-            float   yaw = _adjustRange(_rgAxisValues[axis],     _rgCalibration[axis],_deadband);
-
-                    axis = _rgFunctionAxis[throttleFunction];
-            float   throttle = _adjustRange(_rgAxisValues[axis],_rgCalibration[axis], _throttleMode==ThrottleModeDownZero?false:_deadband);
-
-            float   gimbalPitch = 0.0f;
-            float   gimbalYaw   = 0.0f;
-
-            if(_axisCount > 4) {
-                axis = _rgFunctionAxis[gimbalPitchFunction];
-                gimbalPitch = _adjustRange(_rgAxisValues[axis], _rgCalibration[axis],_deadband);
-            }
-
-            if(_axisCount > 5) {
-                axis = _rgFunctionAxis[gimbalYawFunction];
-                gimbalYaw = _adjustRange(_rgAxisValues[axis],   _rgCalibration[axis],_deadband);
-            }
-
-            if (_accumulator) {
-                static float throttle_accu = 0.f;
-                throttle_accu += throttle * (40 / 1000.f); //for throttle to change from min to max it will take 1000ms (40ms is a loop time)
-                throttle_accu = std::max(static_cast<float>(-1.f), std::min(throttle_accu, static_cast<float>(1.f)));
-                throttle = throttle_accu;
-            }
-
-            if (_circleCorrection) {
-                float roll_limited      = std::max(static_cast<float>(-M_PI_4), std::min(roll,      static_cast<float>(M_PI_4)));
-                float pitch_limited     = std::max(static_cast<float>(-M_PI_4), std::min(pitch,     static_cast<float>(M_PI_4)));
-                float yaw_limited       = std::max(static_cast<float>(-M_PI_4), std::min(yaw,       static_cast<float>(M_PI_4)));
-                float throttle_limited  = std::max(static_cast<float>(-M_PI_4), std::min(throttle,  static_cast<float>(M_PI_4)));
-
-                // Map from unit circle to linear range and limit
-                roll =      std::max(-1.0f, std::min(tanf(asinf(roll_limited)),     1.0f));
-                pitch =     std::max(-1.0f, std::min(tanf(asinf(pitch_limited)),    1.0f));
-                yaw =       std::max(-1.0f, std::min(tanf(asinf(yaw_limited)),      1.0f));
-                throttle =  std::max(-1.0f, std::min(tanf(asinf(throttle_limited)), 1.0f));
-            }
-
-            if ( _exponential < -0.01f) {
-                // Exponential (0% to -50% range like most RC radios)
-                // _exponential is set by a slider in joystickConfigAdvanced.qml
-                // Calculate new RPY with exponential applied
-                roll =  -_exponential*powf(roll, 3) + (1+_exponential)*roll;
-                pitch = -_exponential*powf(pitch,3) + (1+_exponential)*pitch;
-                yaw =   -_exponential*powf(yaw,  3) + (1+_exponential)*yaw;
-            }
-
-            // Adjust throttle to 0:1 range
-            if (_throttleMode == ThrottleModeCenterZero && _activeVehicle->supportsThrottleModeCenterZero()) {
-                if (!_activeVehicle->supportsNegativeThrust() || !_negativeThrust) {
-                    throttle = std::max(0.0f, throttle);
-                }
-            } else {
-                throttle = (throttle + 1.0f) / 2.0f;
-            }
-            qCDebug(JoystickValuesLog) << "name:roll:pitch:yaw:throttle:gimbalPitch:gimbalYaw" << name() << roll << -pitch << yaw << throttle << gimbalPitch << gimbalYaw;
-            // NOTE: The buttonPressedBits going to MANUAL_CONTROL are currently used by ArduSub (and it only handles 16 bits)
-            // Set up button bitmap
-            quint64 buttonPressedBits = 0;  // Buttons pressed for manualControl signal
-            for (int buttonIndex = 0; buttonIndex < _totalButtonCount; buttonIndex++) {
-                quint64 buttonBit = static_cast<quint64>(1LL << buttonIndex);
-                if (_rgButtonValues[buttonIndex] != BUTTON_UP) {
-                    // Mark the button as pressed as long as its pressed
-                    buttonPressedBits |= buttonBit;
-                }
-            }
+            // Initialize to neutral values
+            float roll =        0.0f;
+            float pitch =       0.0f;
+            float yaw =         0.0f;
+            float throttle =    0.5f;
+            float gimbalPitch = 0.0f;
+            float gimbalYaw =   0.0f;
+            int axis =          -1;
 
             // This allows using a joystick just for gimbal control, or just allowing buttons
             if (_activeVehicle && _mainControlEnabled) {
+                axis = _rgFunctionAxis[rollFunction];
+                roll = _adjustRange(_rgAxisValues[axis],    _rgCalibration[axis], _deadband);
+
+                axis = _rgFunctionAxis[pitchFunction];
+                pitch = _adjustRange(_rgAxisValues[axis],   _rgCalibration[axis], _deadband);
+
+                axis = _rgFunctionAxis[yawFunction];
+                yaw = _adjustRange(_rgAxisValues[axis],     _rgCalibration[axis],_deadband);
+
+                axis = _rgFunctionAxis[throttleFunction];
+                throttle = _adjustRange(_rgAxisValues[axis],_rgCalibration[axis], _throttleMode==ThrottleModeDownZero?false:_deadband);
+
+                if (_accumulator) {
+                    static float throttle_accu = 0.f;
+                    throttle_accu += throttle * (40 / 1000.f); //for throttle to change from min to max it will take 1000ms (40ms is a loop time)
+                    throttle_accu = std::max(static_cast<float>(-1.f), std::min(throttle_accu, static_cast<float>(1.f)));
+                    throttle = throttle_accu;
+                }
+
+                if (_circleCorrection) {
+                    float roll_limited      = std::max(static_cast<float>(-M_PI_4), std::min(roll,      static_cast<float>(M_PI_4)));
+                    float pitch_limited     = std::max(static_cast<float>(-M_PI_4), std::min(pitch,     static_cast<float>(M_PI_4)));
+                    float yaw_limited       = std::max(static_cast<float>(-M_PI_4), std::min(yaw,       static_cast<float>(M_PI_4)));
+                    float throttle_limited  = std::max(static_cast<float>(-M_PI_4), std::min(throttle,  static_cast<float>(M_PI_4)));
+
+                    // Map from unit circle to linear range and limit
+                    roll =      std::max(-1.0f, std::min(tanf(asinf(roll_limited)),     1.0f));
+                    pitch =     std::max(-1.0f, std::min(tanf(asinf(pitch_limited)),    1.0f));
+                    yaw =       std::max(-1.0f, std::min(tanf(asinf(yaw_limited)),      1.0f));
+                    throttle =  std::max(-1.0f, std::min(tanf(asinf(throttle_limited)), 1.0f));
+                }
+
+                if ( _exponential < -0.01f) {
+                    // Exponential (0% to -50% range like most RC radios)
+                    // _exponential is set by a slider in joystickConfigAdvanced.qml
+                    // Calculate new RPY with exponential applied
+                    roll =  -_exponential*powf(roll, 3) + (1+_exponential)*roll;
+                    pitch = -_exponential*powf(pitch,3) + (1+_exponential)*pitch;
+                    yaw =   -_exponential*powf(yaw,  3) + (1+_exponential)*yaw;
+                }
+
+                // Adjust throttle to 0:1 range
+                if (_throttleMode == ThrottleModeCenterZero && _activeVehicle->supportsThrottleModeCenterZero()) {
+                    if (!_activeVehicle->supportsNegativeThrust() || !_negativeThrust) {
+                        throttle = std::max(0.0f, throttle);
+                    }
+                } else {
+                    throttle = (throttle + 1.0f) / 2.0f;
+                }
+                // NOTE: The buttonPressedBits going to MANUAL_CONTROL are currently used by ArduSub (and it only handles 16 bits)
+                // Set up button bitmap
+                quint64 buttonPressedBits = 0;  // Buttons pressed for manualControl signal
+                for (int buttonIndex = 0; buttonIndex < _totalButtonCount; buttonIndex++) {
+                    quint64 buttonBit = static_cast<quint64>(1LL << buttonIndex);
+                    if (_rgButtonValues[buttonIndex] != BUTTON_UP) {
+                        // Mark the button as pressed as long as its pressed
+                        buttonPressedBits |= buttonBit;
+                    }
+                }
+
                 uint16_t shortButtons = static_cast<uint16_t>(buttonPressedBits & 0xFFFF);
                 _activeVehicle->sendJoystickDataThreadSafe(roll, pitch, yaw, throttle, shortButtons);
             }
 
             if(_activeVehicle && _gimbalEnabled) {
+
+                axis = _rgFunctionAxis[gimbalPitchFunction];
+                gimbalPitch = _adjustRange(_rgAxisValues[axis], _rgCalibration[axis],_deadband);
+
+                axis = _rgFunctionAxis[gimbalYawFunction];
+                gimbalYaw = _adjustRange(_rgAxisValues[axis],   _rgCalibration[axis],_deadband);
+
                 // Here we handle the gimbal pitch and yaw sending action to vehicle
                 _activeVehicle->sendJoystickExtraDataThreadSafe(gimbalPitch, gimbalYaw);
             }
+            
+            qCDebug(JoystickValuesLog) << "name:roll:pitch:yaw:throttle:gimbalPitch:gimbalYaw" << name() << roll << -pitch << yaw << throttle << gimbalPitch << gimbalYaw;
             
             // This is to notify QML joystick display
             emit axisValues(roll, pitch, yaw, throttle, gimbalPitch, gimbalYaw);
