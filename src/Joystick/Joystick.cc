@@ -998,6 +998,13 @@ void Joystick::setCircleCorrection(bool circleCorrection)
 
 void Joystick::setMainControlEnabled(bool set)
 {
+    // If activating main control, set calibrated = false, to enforce calibration, and disable joysticks in vehicle
+    if (!_mainControlEnabled && set) {
+        _calibrated = false;
+        emit calibratedChanged(_calibrated);
+        qCDebug(JoystickLog) << "Joystick: " << _name << "setMainControlEnabled: setting joystick enabled to false on vehicle, because of main control being activated (calibration required)";
+        _activeVehicle->setJoystickEnabled(false);
+    }
     _mainControlEnabled = set;
     _saveSettings();
     emit mainControlEnabledChanged();
@@ -1005,6 +1012,13 @@ void Joystick::setMainControlEnabled(bool set)
 
 void Joystick::setGimbalEnabled(bool set)
 {
+    // If activating gimbal control, set calibrated = false, to enforce calibration,, and disable joysticks in vehicle
+    if (!_gimbalEnabled && set) {
+        _calibrated = false;
+        emit calibratedChanged(_calibrated);
+        qCDebug(JoystickLog) << "Joystick: " << _name << "setGimbalEnabled: setting joystick enabled to false on vehicle, because of gimbal control being activated (calibration required)";
+        _activeVehicle->setJoystickEnabled(false);
+    }
     _gimbalEnabled = set;
     _saveSettings();
     emit gimbalEnabledChanged();
