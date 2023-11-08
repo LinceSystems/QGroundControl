@@ -61,6 +61,7 @@ protected slots:
     virtual void    _vehicleReady           (bool ready);
     virtual void    _mavlinkMessageReceived (const mavlink_message_t& message);
     virtual void    _activeJoystickChanged  (Joystick* joystick);
+    virtual void    _activeJoystickSecondaryChanged(Joystick* joystick);
     virtual void    _stepZoom               (int direction);
     virtual void    _startZoom              (int direction);
     virtual void    _stopZoom               ();
@@ -100,6 +101,7 @@ protected:
 
     Vehicle*            _vehicle            = nullptr;
     Joystick*           _activeJoystick     = nullptr;
+    Joystick*           _activeJoystickSecondary = nullptr;
     bool                _vehicleReadyState  = false;
     int                 _currentTask        = 0;
     QmlObjectListModel  _cameras;
