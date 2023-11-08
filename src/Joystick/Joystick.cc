@@ -310,7 +310,16 @@ void Joystick::_loadSettings()
         }
         qCDebug(JoystickLog) << "_loadSettings function:axis:badsettings" << function << functionAxis << badSettings;
     }
-    badSettings |= workingAxis < 4;
+    if (_mainControlEnabled) {
+        badSettings |= workingAxis < 4;
+    }
+    if (_gimbalEnabled) {
+        if (_mainControlEnabled) {
+            badSettings |= workingAxis < 6;
+        } else {
+            badSettings |= workingAxis < 2;
+        }
+    }
 
     // FunctionAxis mappings are always stored in TX mode 2
     // Remap to stored TX mode in settings
