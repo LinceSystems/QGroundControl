@@ -23,6 +23,16 @@ import QGroundControl.FactControls  1.0
 Item {
     width:                  grid.width  + (ScreenTools.defaultFontPixelWidth  * 2)
     height:                 grid.height + (ScreenTools.defaultFontPixelHeight * 2)
+
+    property var            parentJoystick: _activeJoystick
+
+    // We should never need this as SetupView should manage it
+    onParentJoystickChanged: {
+        if(_activeJoystick) {
+            enabledMainControl.checked = Qt.binding(function() { return _activeJoystick.mainControlEnabled })
+            enabledGimbal.checked = Qt.binding(function() { return _activeJoystick.gimbalEnabled })
+        }
+    }
     //---------------------------------------------------------------------
     GridLayout {
         id:                 grid
@@ -88,9 +98,34 @@ Item {
             }
         }
         //---------------------------------------------------------------------
+        //-- Disable Main Control
+        QGCLabel {
+            text:               qsTr("Enable Main Control")
+            Layout.alignment:   Qt.AlignVCenter
+        }
+        QGCCheckBox {
+            id:                 enabledMainControl
+            enabled:            _activeJoystick
+            onClicked:          _activeJoystick.mainControlEnabled = checked
+            Component.onCompleted: {
+                checked = _activeJoystick.mainControlEnabled
+            }
+        }
+        QGCLabel {
+            text:               qsTr("Unclicking this option will disable main controls ( throttle, roll, ") +
+                                qsTr("pitch and yaw ) in this joystick. This is desired if the joystick ") +
+                                qsTr("is only needed for gimbal control, or only for using buttons")
+
+            font.pointSize:     ScreenTools.smallFontPointSize
+            Layout.alignment:   Qt.AlignVCenter
+            Layout.columnSpan:  2
+            wrapMode:           Text.WordWrap
+            Layout.preferredWidth: ScreenTools.defaultFontPixelWidth * 30 
+        }
+        //---------------------------------------------------------------------
         //-- Enable Gimbal
         QGCLabel {
-            text:               qsTr("Enable gimbal control (Experimental)")
+            text:               qsTr("Enable gimbal control")
             Layout.alignment:   Qt.AlignVCenter
         }
         QGCCheckBox {
@@ -99,14 +134,6 @@ Item {
             onClicked:          _activeJoystick.gimbalEnabled = checked
             Component.onCompleted: {
                 checked = _activeJoystick.gimbalEnabled
-            }
-            Connections {
-                target: joystickManager
-                onActiveJoystickChanged: {
-                    if(_activeJoystick) {
-                        enabledGimbal.checked = Qt.binding(function() { return _activeJoystick.gimbalEnabled })
-                    }
-                }
             }
         }
         QGCLabel {
