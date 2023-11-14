@@ -27,7 +27,8 @@ Item {
     readonly property real axisMonitorWidth: ScreenTools.defaultFontPixelWidth * 32
 
     property bool _buttonsOnly:         _activeJoystick.axisCount == 0
-    property bool _requiresCalibration: !_activeJoystick.calibrated && !_buttonsOnly
+    property bool _enableAllowed:       joystickManager.multiJoystickConfigOk
+    property bool _axisUsed:         !_buttonsOnly && (_activeJoystick.mainControlEnabled || _activeJoystick.gimbalEnabled)
 
     Column {
         id:                 mainCol
@@ -40,13 +41,13 @@ Item {
             //---------------------------------------------------------------------
             //-- Enable Joystick
             QGCLabel {
-                text:               _requiresCalibration ? qsTr("Enable not allowed (Calibrate First)") : qsTr("Enable joystick input")
+                text:               qsTr("Enable joystick input for this vehicle ") + (joystickManager.multiJoystickConfigMessage ? qsTr("(Not allowed)") : "")
                 Layout.alignment:   Qt.AlignVCenter
                 Layout.minimumWidth: ScreenTools.defaultFontPixelWidth * 36
             }
             QGCCheckBox {
                 id:             enabledSwitch
-                enabled:        !_requiresCalibration
+                enabled:        _enableAllowed
                 onClicked:      {
                     globals.activeVehicle.joystickEnabled = checked
                     globals.activeVehicle.saveJoystickSettings()
@@ -69,22 +70,86 @@ Item {
                     }
                 }
             }
+            // Messages about what is wrong with multi joystick configuration in case joystick is not allowed because of it
+            QGCLabel {
+                id:                 multiJoystickConfigMessageLabel
+                text:               joystickManager.multiJoystickConfigMessage
+                Layout.fillWidth:   true
+                Layout.columnSpan:  2
+                font.bold:          true
+                wrapMode:           Text.WordWrap
+                visible:            !_enableAllowed
+                color:              "red"
+            }
+            QGCLabel {
+                text:               qsTr("When enabled joysticks will send control commands to the vehicle. ") +
+                                    qsTr("If disabled, joysticks will not send any command at all to the vehicle")
+
+                font.pointSize:     ScreenTools.smallFontPointSize
+                Layout.fillWidth:   true
+                Layout.columnSpan:  2
+                wrapMode:           Text.WordWrap
+                visible:            !multiJoystickConfigMessageLabel.visible
+            }
+            // Separator bar
+            Rectangle {
+                height: 2
+                Layout.fillWidth:   true
+                Layout.columnSpan:  2
+                color:              qgcPal.windowShade
+            }
             //---------------------------------------------------------------------
             //-- Joystick Selector
             QGCLabel {
-                text:               qsTr("Active joystick:")
+                text:               joystickPrefix + qsTr("Joystick:")
                 Layout.alignment:   Qt.AlignVCenter
+                enabled:            globals.activeVehicle.joystickEnabled
+
+                property var joystickPrefix: joystickManager.activeJoystickSecondary != undefined ? 
+                                                " " + (controller.isSecondary ? qsTr("Secondary") : qsTr("Primary")) + " " : 
+                                                " "
             }
             QGCComboBox {
                 id:                 joystickCombo
                 width:              ScreenTools.defaultFontPixelWidth * 40
                 Layout.alignment:   Qt.AlignVCenter
                 model:              joystickManager.joystickNames
-                onActivated:        joystickManager.activeJoystickName = textAt(index)
+
+                function showWarningSameJoysticks() {
+                    mainWindow.showMessageDialog(qsTr("Wrong Joystick Setup"), qsTr("Primary and secondary Joysticks can not be the same"))
+                }
+
+                function updateCurrentJoystickIndex() {
+                    var index = joystickCombo.find(controller.isSecondary ? joystickManager.activeJoystickSecondaryName : joystickManager.activeJoystickName)
+                        if (index >= 0) {
+                            joystickCombo.currentIndex = index
+                        }
+                }
+                
+                onActivated:        {
+                    // Throw warning and return if user attempts to set both joysticks to the same one, although it would be handled in the backend as well anyway
+                    if (controller.isSecondary) { 
+                        if (textAt(index) === joystickManager.activeJoystickName) {
+                            showWarningSameJoysticks()
+                        } else {
+                            joystickManager.activeJoystickSecondaryName = textAt(index)
+                        }
+                    } else {
+                        if (textAt(index) === joystickManager.activeJoystickSecondaryName) {
+                            showWarningSameJoysticks()
+                        } else {
+                            joystickManager.activeJoystickName = textAt(index)
+                        }
+                    }
+                    // Update index, in case Joystick manager refuses the active joystick set, because of conflicts
+                    // like attempting to set primary and secondary joystick to the same one, etc
+                    updateCurrentJoystickIndex()
+                }
+
                 Component.onCompleted: {
-                    var index = joystickCombo.find(joystickManager.activeJoystickName)
+                    var index = joystickCombo.find(controller.isSecondary ? joystickManager.activeJoystickSecondaryName : joystickManager.activeJoystickName)
                     if (index === -1) {
-                        console.warn(qsTr("Active joystick name not in combo"), joystickManager.activeJoystickName)
+                        console.warn(qsTr("Active joystick name not in combo"), controller.isSecondary ? joystickManager.activeJoystickSecondaryName : joystickManager.activeJoystickName)
                     } else {
                         joystickCombo.currentIndex = index
                     }
@@ -92,23 +157,74 @@ Item {
                 Connections {
                     target: joystickManager
                     onAvailableJoysticksChanged: {
-                        var index = joystickCombo.find(joystickManager.activeJoystickName)
-                        if (index >= 0) {
-                            joystickCombo.currentIndex = index
-                        }
+                        joystickCombo.updateCurrentJoystickIndex()
+                    }
+                    onActiveJoystickChanged: {
+                        joystickCombo.updateCurrentJoystickIndex()
+                    }
+                    onActiveJoystickSecondaryChanged: {
+                        joystickCombo.updateCurrentJoystickIndex()
                     }
                 }
+            }
+            // --------------------------------------------------------------------
+            // -- Other joystick indicator
+            // Even if it is not this submenu's joystick, it is interesting to be aware that there is another active joystick from this menu as well
+            QGCLabel {
+                text:               buttonForgetSecondary.visible ? qsTr("Secondary Joystick: last used not connected, but a new one is present") :
+                                        controller.isSecondary ? 
+                                            qsTr("Primary Joystick also active: ") :
+                                                qsTr("Secondary Joystick also active: ")
+
+                visible:            otherActiveJoystick != undefined || (joystickManager.joysticks.length > 1)
+                Layout.fillWidth:   true
+                enabled:            globals.activeVehicle.joystickEnabled
+
+                property var otherActiveJoystick: controller.isSecondary ? joystickManager.activeJoystick : joystickManager.activeJoystickSecondary
+                property var otherActiveJoystickName : otherActiveJoystick ? otherActiveJoystick.name : ""
+            }
+            QGCLabel {
+                text:               otherActiveJoystickName
+
+                visible:            otherActiveJoystick != undefined || (joystickManager.joysticks.length > 1)
+                Layout.fillWidth:   true
+                enabled:            globals.activeVehicle.joystickEnabled
+
+                property var otherActiveJoystick: controller.isSecondary ? joystickManager.activeJoystick : joystickManager.activeJoystickSecondary
+                property var otherActiveJoystickName : otherActiveJoystick ? otherActiveJoystick.name : ""
+            }
+            // --------------------------------------------------------------------
+            // -- Forget existent second joystick button: 
+            // If we have 2 joysticks working, but we disconnect one of them and want to use a third one, we can not seem to make the second menu appear
+            // automatically as out of safety we prevent this ( to manage gracefully reconections of joysticks being used ). We need to be able to "reset" this behaviour
+            // to set up a new secondary joystick
+            QGCButton {
+                // we can reuse instead the combobox as well, just making sure it is only visible in primary, and refers always to secondary
+                id:                 buttonForgetSecondary
+                text:               qsTr("Forget latest second joystick and set up a new one")
+                visible:            !controller.isSecondary && joystickManager.joysticks.length > 1 && !joystickManager.activeJoystickSecondary
+                Layout.fillWidth:   true
+                Layout.columnSpan:  2
+                onClicked:          joystickManager.resetJoystickPrimarySecondarySettings()
+            }
+            // Separator bar
+            Rectangle {
+                height: 2
+                Layout.fillWidth:   true
+                Layout.columnSpan:  2
+                color:              qgcPal.windowShade
             }
             //---------------------------------------------------------------------
             //-- RC Mode
             QGCLabel {
                 text:               qsTr("RC Mode:")
                 Layout.alignment:   Qt.AlignVCenter
-                visible:            !_buttonsOnly
+                visible:            _activeJoystick.mainControlEnabled
+                enabled:            globals.activeVehicle.joystickEnabled
             }
             Row {
                 spacing:            ScreenTools.defaultFontPixelWidth
-                visible:            !_buttonsOnly
+                visible:            _activeJoystick.mainControlEnabled
                 QGCRadioButton {
                     text:       "1"
                     checked:    controller.transmitterMode === 1
@@ -141,6 +257,7 @@ Item {
         }
         Row {
             spacing:                ScreenTools.defaultFontPixelWidth
+            enabled:                globals.activeVehicle.joystickEnabled
             //---------------------------------------------------------------------
             //-- Axis Monitors
             Rectangle {
@@ -151,7 +268,7 @@ Item {
                 radius:             ScreenTools.defaultFontPixelWidth * 0.5
                 width:              axisGrid.width  + (ScreenTools.defaultFontPixelWidth  * 2)
                 height:             axisGrid.height + (ScreenTools.defaultFontPixelHeight * 2)
-                visible:            !_buttonsOnly
+                visible:            _axisUsed
                 GridLayout {
                     id:                 axisGrid
                     columns:            2
@@ -161,6 +278,7 @@ Item {
                     QGCLabel {
                         text:               globals.activeVehicle.sub ? qsTr("Lateral") : qsTr("Roll")
                         Layout.minimumWidth: ScreenTools.defaultFontPixelWidth * 12
+                        visible:            _activeJoystick.mainControlEnabled
                     }
                     AxisMonitor {
                         id:                 rollAxis
@@ -168,12 +286,14 @@ Item {
                         width:              axisMonitorWidth
                         mapped:             controller.rollAxisMapped
                         reversed:           controller.rollAxisReversed
+                        visible:            _activeJoystick.mainControlEnabled
                     }
 
                     QGCLabel {
                         id:                 pitchLabel
                         width:              _attitudeLabelWidth
                         text:               globals.activeVehicle.sub ? qsTr("Forward") : qsTr("Pitch")
+                        visible:            _activeJoystick.mainControlEnabled
                     }
                     AxisMonitor {
                         id:                 pitchAxis
@@ -181,12 +301,14 @@ Item {
                         width:              axisMonitorWidth
                         mapped:             controller.pitchAxisMapped
                         reversed:           controller.pitchAxisReversed
+                        visible:            _activeJoystick.mainControlEnabled
                     }
 
                     QGCLabel {
                         id:                 yawLabel
                         width:              _attitudeLabelWidth
                         text:               qsTr("Yaw")
+                        visible:            _activeJoystick.mainControlEnabled
                     }
                     AxisMonitor {
                         id:                 yawAxis
@@ -194,12 +316,14 @@ Item {
                         width:              axisMonitorWidth
                         mapped:             controller.yawAxisMapped
                         reversed:           controller.yawAxisReversed
+                        visible:            _activeJoystick.mainControlEnabled
                     }
 
                     QGCLabel {
                         id:                 throttleLabel
                         width:              _attitudeLabelWidth
                         text:               qsTr("Throttle")
+                        visible:            _activeJoystick.mainControlEnabled
                     }
                     AxisMonitor {
                         id:                 throttleAxis
@@ -207,13 +331,14 @@ Item {
                         width:              axisMonitorWidth
                         mapped:             controller.throttleAxisMapped
                         reversed:           controller.throttleAxisReversed
+                        visible:            _activeJoystick.mainControlEnabled
                     }
 
                     QGCLabel {
                         id:                 gimbalPitchLabel
                         width:              _attitudeLabelWidth
                         text:               qsTr("Gimbal Pitch")
-                        visible:            controller.hasGimbalPitch && _activeJoystick && _activeJoystick.gimbalEnabled
+                        visible:            _activeJoystick && _activeJoystick.gimbalEnabled
                     }
                     AxisMonitor {
                         id:                 gimbalPitchAxis
@@ -221,14 +346,14 @@ Item {
                         width:              axisMonitorWidth
                         mapped:             controller.gimbalPitchAxisMapped
                         reversed:           controller.gimbalPitchAxisReversed
-                        visible:            controller.hasGimbalPitch && _activeJoystick && _activeJoystick.gimbalEnabled
+                        visible:            _activeJoystick && _activeJoystick.gimbalEnabled
                     }
 
                     QGCLabel {
                         id:                 gimbalYawLabel
                         width:              _attitudeLabelWidth
                         text:               qsTr("Gimbal Yaw")
-                        visible:            controller.hasGimbalYaw && _activeJoystick && _activeJoystick.gimbalEnabled
+                        visible:            _activeJoystick && _activeJoystick.gimbalEnabled
                     }
                     AxisMonitor {
                         id:                 gimbalYawAxis
@@ -236,7 +361,7 @@ Item {
                         width:              axisMonitorWidth
                         mapped:             controller.gimbalYawAxisMapped
                         reversed:           controller.gimbalYawAxisReversed
-                        visible:            controller.hasGimbalYaw && _activeJoystick && _activeJoystick.gimbalEnabled
+                        visible:            _activeJoystick && _activeJoystick.gimbalEnabled
                     }
 
                     Connections {
@@ -257,9 +382,10 @@ Item {
                 border.color:       qgcPal.text
                 border.width:       1
                 radius:             ScreenTools.defaultFontPixelWidth * 0.5
-                width:              axisRect.width
-                height:             axisRect.height
+                width:              axisRect.visible ? axisRect.width :  buttonsFlow.width * 1.2
+                height:             axisRect.visible ? axisRect.height : buttonsFlow.height * 1.2  
                 Flow {
+                    id:                 buttonsFlow
                     width:              ScreenTools.defaultFontPixelWidth * 30
                     spacing:            -1
                     anchors.centerIn:   parent
