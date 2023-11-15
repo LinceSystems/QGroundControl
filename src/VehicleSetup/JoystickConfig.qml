@@ -32,7 +32,7 @@ SetupPage {
     readonly property real  _attitudeLabelWidth: ScreenTools.defaultFontPixelWidth * 12
 
     // Override this, it is the only way of showing that warning when vehicle armed so Joystick settings can't be changed
-    _disableDueToArmed: globals.activeVehicle ? globals.activeVehicle.armed : false
+    //_disableDueToArmed: globals.activeVehicle ? globals.activeVehicle.armed : false
     
     // This property enables reusing this menu and all its childs for different joysticks
     property bool isSecondary: false
