@@ -200,6 +200,7 @@ private:
     const struct stateMachineEntry* _getStateMachineEntry(int step);
 
     void _advanceState          ();
+    void _skipStateIfNeeded     ();
     void _setupCurrentState     ();
 
     bool _validAxis             (int axis) const;

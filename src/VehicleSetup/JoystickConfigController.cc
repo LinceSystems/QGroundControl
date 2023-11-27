@@ -189,19 +189,25 @@ void JoystickConfigController::_advanceState()
     }
     _currentStep++;
 #if ENABLE_GIMBAL
-    // TODO There are no MAVLink messages to handle gimbal from this
-    const stateMachineEntry* state = _getStateMachineEntry(_currentStep);
-    //-- Handle Gimbal
-    if (state->channelID > _axisCount) {
-        //-- No channels for gimbal
-        _advanceState();
-    }
-    if((state->channelID == 4 || state->channelID == 5) && !_parentJoystick->gimbalEnabled()) {
-        //-- Gimbal disabled. Skip it.
-        _advanceState();
-    }
+    _skipStateIfNeeded();
 #endif
     _setupCurrentState();
+}
+
+void JoystickConfigController::_skipStateIfNeeded()
+{
+    bool skipNeeded = true;
+    while(skipNeeded) {
+        const stateMachineEntry* state = _getStateMachineEntry(_currentStep);
+        // Skip step if we don't have enough axis for all our channels, or if gimbal is disabled and we already did main controls
+        if  (((state->channelID > _axisCount) && _parentJoystick->mainControlEnabled()) || 
+            ((state->channelID == 4 || state->channelID == 5) && !_parentJoystick->gimbalEnabled())) {
+
+            _currentStep++;
+        } else {
+            skipNeeded = false;
+        }
+    }
 }
 
 bool JoystickConfigController::nextEnabled()
