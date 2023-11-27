@@ -34,3 +34,23 @@ LOGIC
 - If primary and secondary are swapped ( due to disconnection of primary ), when primary is connected back it will
   have the same settings/control, it will just appear as secondary.
 - If secondary is disconnected, when it is connected back it will have the same settings as well.
+
+PR message:
+
+This Pr adds support for 2 joysticks in QGC. We realized the need for this trying to use Herelink with rc over mavlink. Herelink exposes buttons and joysticks as separate joysticks, so there was no way to accomplish this rc over mavlink on Herelink and keeping button actions at the same time. 
+
+I can imagine this might apply to other controllers, or even in desktop it could be useful, combining different joysticks for main and camera control, or a main joystick plus only buttons joystick, etc.
+
+It is marked as draft because it references some gimbal  control changes that are happening here: https://github.com/mavlink/qgroundcontrol/pull/10667
+
+And there is also a couple of items to be fixed:
+-  Fix JoystickIndicator ( only used for sub )
+- Joystick.cc: This appears 4 times when calibrating only gimbal:
+     "setFunctionAxis: invalid axis index "
+      
+      in:
+      void Joystick::setFunctionAxis(AxisFunction_t function, int axis)
+     
+- Something to check if joysticks has only buttons, and if so set maincontrolenabled to false. Otherwise buttonsonly joysticks will get maincontrol enabled by default.
+  and as they are not calibrated we won't be able to enable them, but advanced tab will be missing so we won't have the chance to set it up anyway. It is a race condition
+  
