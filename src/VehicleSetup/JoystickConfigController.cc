@@ -804,6 +804,26 @@ bool JoystickConfigController::gimbalYawAxisReversed()
     }
 }
 
+bool JoystickConfigController::hasGimbalPitch()
+{
+    if (_parentJoystick == nullptr) {
+        qCWarning(JoystickConfigControllerLog) << "Warning, parentJoystick is nullptr";
+        return false;
+    }
+    
+    return _axisCount > 4 || !_parentJoystick->mainControlEnabled();
+}
+
+bool JoystickConfigController::hasGimbalYaw()
+{
+    if (_parentJoystick == nullptr) {
+        qCWarning(JoystickConfigControllerLog) << "Warning, parentJoystick is nullptr";
+        return false;
+    }
+
+    return _axisCount > 5 || !_parentJoystick->mainControlEnabled();
+}
+
 void JoystickConfigController::setTransmitterMode(int mode)
 {
     // Paranoid check

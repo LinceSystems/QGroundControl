@@ -93,8 +93,8 @@ public:
     bool gimbalPitchAxisReversed            ();
     bool gimbalYawAxisReversed              ();
 
-    bool hasGimbalPitch                     () { return _axisCount > 4; }
-    bool hasGimbalYaw                       () { return _axisCount > 5; }
+    bool hasGimbalPitch                     ();
+    bool hasGimbalYaw                       ();
 
     bool getDeadbandToggle                  ();
     void setDeadbandToggle                  (bool);
