@@ -103,7 +103,7 @@ Item {
 
         QGCLabel {
             id: gimbalPitchLabel
-            text: rootItem._gimbalAvailable ? "Tilt: " + rootItem._gimbalController.activeGimbal.absolutePitch.toFixed(1) : ""
+            text: rootItem._gimbalAvailable ? "Tilt: " + rootItem._gimbalController.activeGimbal.pitch.toFixed(1) : ""
             visible: rootItem._gimbalAvailable
             anchors.top: parent.top
             anchors.left: parent.horizontalCenter
