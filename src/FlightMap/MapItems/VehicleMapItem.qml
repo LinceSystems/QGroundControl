@@ -49,7 +49,7 @@ MapQuickItem {
             anchors.centerIn:             vehicleItem
             width:                        vehicleItem.width * 2
             height:                       vehicleItem.height * 2
-            property var gimbalYaw:       vehicle && vehicle.gimbalController.activeGimbal ? vehicle.gimbalController.activeGimbal.bodyYaw : NaN
+            property var gimbalYaw:       vehicle && vehicle.gimbalController.activeGimbal ? vehicle.gimbalController.activeGimbal.absoluteYaw : NaN
             rotation:                     gimbalYaw + 180
             onGimbalYawChanged:           canvas.requestPaint()
             visible:                      vehicle && !isNaN(gimbalYaw)
