@@ -32,7 +32,7 @@ public:
     qreal absolutePitch() const           { return _absolutePitch; }
     qreal bodyYaw() const                 { return _bodyYaw; }
     qreal absoluteYaw() const             { return _absoluteYaw; }
-    bool  yawLock() const                  { return _yawLock; }
+    bool  yawLock() const                 { return _yawLock; }
     bool  gimbalHaveControl() const       { return _haveControl; }
     bool  gimbalOthersHaveControl() const { return _othersHaveControl; }
     uint  deviceId() const                { return _deviceId; }
