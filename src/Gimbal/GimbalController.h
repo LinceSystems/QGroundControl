@@ -115,9 +115,10 @@ public:
 
 public slots:
     // These slots are conected with joysticks for button control
-    Q_INVOKABLE void centerGimbal               ();
-    Q_INVOKABLE void gimbalPitchStep            (int direction);
-    Q_INVOKABLE void gimbalYawStep              (int direction);
+    void gimbalYawLock              (bool yawLock) { toggleGimbalYawLock(false, yawLock); }
+    void centerGimbal               ();
+    void gimbalPitchStep            (int direction);
+    void gimbalYawStep              (int direction);
 
 signals:
     void    activeGimbalChanged           ();
