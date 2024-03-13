@@ -544,20 +544,6 @@ void GimbalController::toggleGimbalYawLock(bool force, bool set)
     sendPitchYawFlags(flags);
 }
 
-void GimbalController::setGimbalRcTargeting()
-{
-    // This needs to be generic too
-    if (_vehicle->apmFirmware()) {
-        _vehicle->sendMavCommand(_vehicle->compId(),
-            MAV_CMD_DO_AUX_FUNCTION,
-            true,    // show errors
-            27,      // retract mount
-            0);      // low switch, sets it to default rc mode
-    } else {
-        // Do the standard thing for PX4.
-    }
-}
-
 void GimbalController::sendPitchYawFlags(uint32_t flags)
 {
     const bool yaw_in_vehicle_frame = _yawInVehicleFrame(flags);

@@ -110,7 +110,6 @@ public:
     Q_INVOKABLE void toggleGimbalYawLock        (bool force = false, bool set = false);
     Q_INVOKABLE void acquireGimbalControl       ();
     Q_INVOKABLE void releaseGimbalControl       ();
-    Q_INVOKABLE void setGimbalRcTargeting       ();
     Q_INVOKABLE void setGimbalHomeTargeting     ();
 
 public slots:
