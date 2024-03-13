@@ -477,27 +477,6 @@ void GimbalController::sendPitchAbsoluteYaw(float pitch, float yaw, bool showErr
                 _activeGimbal->deviceId());
 }
 
-void GimbalController::setGimbalHomeTargeting()
-{
-    if (!_tryGetGimbalControl()) {
-        return;
-    }
-
-    // TODO: this should use the ROI commands
-
-    _vehicle->sendMavCommand(
-                _vehicle->compId(),
-                MAV_CMD_DO_MOUNT_CONTROL,
-                false,                               // show errors
-                0,                                   // Pitch 0 - 90
-                0,                                   // Roll (not used)
-                0,                                   // Yaw -180 - 180
-                0,                                   // Altitude (not used)
-                0,                                   // Latitude (not used)
-                0,                                   // Longitude (not used)
-                MAV_MOUNT_MODE_HOME_LOCATION);       // MAVLink Roll,Pitch,Yaw
-}
-
 void GimbalController::toggleGimbalRetracted(bool force, bool set)
 {
     if (!_tryGetGimbalControl()) {
