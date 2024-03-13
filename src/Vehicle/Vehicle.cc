@@ -2904,53 +2904,31 @@ void Vehicle::stopGuidedModeROI()
         qgcApp()->showAppMessage(QStringLiteral("ROI mode not supported by Vehicle."));
         return;
     }
-    // Ardupilot manages differently here, command with lat,long and alt to 0
-    if (apmFirmware()) {
-        if (capabilityBits() & MAV_PROTOCOL_CAPABILITY_COMMAND_INT) {
-        _isROIEnabled = false; // remove map indicator
-        _roiApmCancelSent = true; // workaround until ardupilot implements MAV_CMD_DO_SET_ROI_NONE, to hide properly map item
-        emit isROIEnabledChanged();
-
+    if (capabilityBits() & MAV_PROTOCOL_CAPABILITY_COMMAND_INT) {
         sendMavCommandInt(
                     defaultComponentId(),
-                    MAV_CMD_DO_SET_ROI_LOCATION,
-                    MAV_FRAME_GLOBAL_RELATIVE_ALT,
+                    MAV_CMD_DO_SET_ROI_NONE,
+                    MAV_FRAME_GLOBAL,
                     true,                           // show error if fails
                     static_cast<float>(qQNaN()),    // Empty
                     static_cast<float>(qQNaN()),    // Empty
                     static_cast<float>(qQNaN()),    // Empty
                     static_cast<float>(qQNaN()),    // Empty
-                    0.0f,   // Empty
-                    0.0f,   // Empty
-                    0.0f);  // Empty
-        }
+                    static_cast<double>(qQNaN()),   // Empty
+                    static_cast<double>(qQNaN()),   // Empty
+                    static_cast<float>(qQNaN()));   // Empty
     } else {
-        if (capabilityBits() & MAV_PROTOCOL_CAPABILITY_COMMAND_INT) {
-            sendMavCommandInt(
-                        defaultComponentId(),
-                        MAV_CMD_DO_SET_ROI_NONE,
-                        MAV_FRAME_GLOBAL,
-                        true,                           // show error if fails
-                        static_cast<float>(qQNaN()),    // Empty
-                        static_cast<float>(qQNaN()),    // Empty
-                        static_cast<float>(qQNaN()),    // Empty
-                        static_cast<float>(qQNaN()),    // Empty
-                        static_cast<double>(qQNaN()),   // Empty
-                        static_cast<double>(qQNaN()),   // Empty
-                        static_cast<float>(qQNaN()));   // Empty
-        } else {
-            sendMavCommand(
-                        defaultComponentId(),
-                        MAV_CMD_DO_SET_ROI_NONE,
-                        true,                           // show error if fails
-                        static_cast<float>(qQNaN()),    // Empty
-                        static_cast<float>(qQNaN()),    // Empty
-                        static_cast<float>(qQNaN()),    // Empty
-                        static_cast<float>(qQNaN()),    // Empty
-                        static_cast<float>(qQNaN()),    // Empty
-                        static_cast<float>(qQNaN()),    // Empty
-                        static_cast<float>(qQNaN()));   // Empty
-        }
+        sendMavCommand(
+                    defaultComponentId(),
+                    MAV_CMD_DO_SET_ROI_NONE,
+                    true,                           // show error if fails
+                    static_cast<float>(qQNaN()),    // Empty
+                    static_cast<float>(qQNaN()),    // Empty
+                    static_cast<float>(qQNaN()),    // Empty
+                    static_cast<float>(qQNaN()),    // Empty
+                    static_cast<float>(qQNaN()),    // Empty
+                    static_cast<float>(qQNaN()),    // Empty
+                    static_cast<float>(qQNaN()));   // Empty
     }
 }
 
