@@ -200,16 +200,7 @@ GimbalController::_handleGimbalDeviceAttitudeStatus(const mavlink_message_t& mes
         return;
     }
 
-    const bool yaw_in_vehicle_frame = [&](){
-        if ((attitude_status.flags & GIMBAL_DEVICE_FLAGS_YAW_IN_VEHICLE_FRAME) > 0) {
-            return true;
-        } else if ((attitude_status.flags & GIMBAL_DEVICE_FLAGS_YAW_IN_EARTH_FRAME) > 0) {
-            return false;
-        } else {
-            // For backwards compatibility: if both new flags are 0, yaw lock defines the frame.
-            return (attitude_status.flags & GIMBAL_DEVICE_FLAGS_YAW_LOCK) == 0;
-        }
-    }();
+    const bool yaw_in_vehicle_frame = _yawInVehicleFrame(attitude_status.flags);
 
     gimbal_it->retracted = (attitude_status.flags & GIMBAL_DEVICE_FLAGS_RETRACT) > 0;
     gimbal_it->neutral = (attitude_status.flags & GIMBAL_DEVICE_FLAGS_NEUTRAL) > 0;
@@ -330,6 +321,18 @@ bool GimbalController::_tryGetGimbalControl()
         acquireGimbalControl();
     }
     return true;
+}
+
+bool GimbalController::_yawInVehicleFrame(uint32_t flags)
+{
+    if ((flags & GIMBAL_DEVICE_FLAGS_YAW_IN_VEHICLE_FRAME) > 0) {
+        return true;
+    } else if ((flags & GIMBAL_DEVICE_FLAGS_YAW_IN_EARTH_FRAME) > 0) {
+        return false;
+    } else {
+        // For backwards compatibility: if both new flags are 0, yaw lock defines the frame.
+        return (flags & GIMBAL_DEVICE_FLAGS_YAW_LOCK) == 0;
+    }
 }
 
 void GimbalController::gimbalPitchStep(int direction)
@@ -557,12 +560,14 @@ void GimbalController::setGimbalRcTargeting()
 
 void GimbalController::sendPitchYawFlags(uint32_t flags)
 {
+    const bool yaw_in_vehicle_frame = _yawInVehicleFrame(flags);
+
     _vehicle->sendMavCommand(
                 _vehicle->compId(),
                 MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW,
                 true,
-                static_cast<float>(qQNaN()),
-                static_cast<float>(qQNaN()),
+                _activeGimbal->absolutePitch(),
+                yaw_in_vehicle_frame ? _activeGimbal->bodyYaw() : _activeGimbal->absoluteYaw(),
                 static_cast<float>(qQNaN()),
                 static_cast<float>(qQNaN()),
                 flags,

@@ -137,6 +137,7 @@ private:
     void    _handleGimbalDeviceAttitudeStatus(const mavlink_message_t& message);
     void    _checkComplete                   (Gimbal& gimbal, uint8_t compid);
     bool    _tryGetGimbalControl             ();
+    bool    _yawInVehicleFrame               (uint32_t flags);
 
     MAVLinkProtocol*    _mavlink            = nullptr;
     Vehicle*            _vehicle            = nullptr;
