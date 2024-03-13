@@ -136,22 +136,22 @@ Item {
                 ToolStripAction {
                     text:               qsTr("Yaw Lock")
                     iconSource:         "/HA_Icons/YAW_LOCK.png"
-                    onTriggered:        _activeVehicle ? _activeVehicle.gimbalController.toggleGimbalYawLock(true, true) : undefined
+                    onTriggered:        _activeVehicle ? _activeVehicle.gimbalController.toggleGimbalYawLock(true) : undefined
                 },
                 ToolStripAction {
                     text:               qsTr("Yaw Follow")
                     iconSource:         "/HA_Icons/YAW_UNLOCK.png"
-                    onTriggered:        _activeVehicle ? _activeVehicle.gimbalController.toggleGimbalYawLock(true, false) : undefined
+                    onTriggered:        _activeVehicle ? _activeVehicle.gimbalController.toggleGimbalYawLock(false) : undefined
                 },
                 ToolStripAction {
                     text:               qsTr("Retract")
                     iconSource:         "/HA_Icons/RETRACT_ON.png"
-                    onTriggered:        _activeVehicle ? _activeVehicle.gimbalController.toggleGimbalRetracted(true, true) : undefined
+                    onTriggered:        _activeVehicle ? _activeVehicle.gimbalController.toggleGimbalRetracted(true) : undefined
                 },
                 ToolStripAction {
                     text:               qsTr("Neutral")
                     iconSource:         "/HA_Icons/NEUTRAL.png"
-                    onTriggered:        _activeVehicle ? _activeVehicle.gimbalController.toggleGimbalNeutral(true, true) : undefined
+                    onTriggered:        _activeVehicle ? _activeVehicle.gimbalController.toggleGimbalNeutral(true) : undefined
                 }
             ]
         }
