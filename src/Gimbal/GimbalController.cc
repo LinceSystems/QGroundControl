@@ -477,7 +477,7 @@ void GimbalController::sendPitchAbsoluteYaw(float pitch, float yaw, bool showErr
                 _activeGimbal->deviceId());
 }
 
-void GimbalController::toggleGimbalRetracted(bool force, bool set)
+void GimbalController::toggleGimbalRetracted(bool set)
 {
     if (!_tryGetGimbalControl()) {
         return;
@@ -493,7 +493,7 @@ void GimbalController::toggleGimbalRetracted(bool force, bool set)
     sendPitchYawFlags(flags);
 }
 
-void GimbalController::toggleGimbalNeutral(bool force, bool set)
+void GimbalController::toggleGimbalNeutral(bool set)
 {
     if (!_tryGetGimbalControl()) {
         return;
@@ -508,7 +508,7 @@ void GimbalController::toggleGimbalNeutral(bool force, bool set)
     sendPitchYawFlags(flags);
 }
 
-void GimbalController::toggleGimbalYawLock(bool force, bool set)
+void GimbalController::toggleGimbalYawLock(bool set)
 {
     if (!_tryGetGimbalControl()) {
         return;
