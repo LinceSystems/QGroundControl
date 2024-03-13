@@ -196,7 +196,7 @@ Item {
                     ToolStripAction {
                         text:               qsTr("Point Home")
                         iconSource:         "/HA_Icons/HOME.png"
-                        onTriggered:        _activeVehicle ? _activeVehicle.gimbalController.setGimbalHomeTargeting() : undefined
+                        onTriggered:        _activeVehicle ? _activeVehicle.guidedModeROI(_activeVehicle.homePosition) : undefined
                     },
                     ToolStripAction {
                         id:                 mapToolsToolStripAction
