@@ -134,11 +134,6 @@ Item {
             id: modesToolStripActionList
             model: [
                 ToolStripAction {
-                    text:               qsTr("RC target")
-                    iconSource:         "/HA_Icons/PAYLOAD.png"
-                    onTriggered:        _activeVehicle ? _activeVehicle.gimbalController.setGimbalRcTargeting() : undefined
-                },
-                ToolStripAction {
                     text:               qsTr("Yaw Lock")
                     iconSource:         "/HA_Icons/YAW_LOCK.png"
                     onTriggered:        _activeVehicle ? _activeVehicle.gimbalController.toggleGimbalYawLock(true, true) : undefined
