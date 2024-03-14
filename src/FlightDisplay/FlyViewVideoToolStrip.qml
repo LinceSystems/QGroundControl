@@ -151,7 +151,7 @@ Item {
                 ToolStripAction {
                     text:               qsTr("Neutral")
                     iconSource:         "/HA_Icons/NEUTRAL.png"
-                    onTriggered:        _activeVehicle ? _activeVehicle.gimbalController.toggleGimbalNeutral(true) : undefined
+                    onTriggered:        _activeVehicle ? _activeVehicle.gimbalController.centerGimbal() : undefined
                 }
             ]
         }
