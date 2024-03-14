@@ -504,21 +504,6 @@ void GimbalController::toggleGimbalRetracted(bool set)
     sendPitchYawFlags(flags);
 }
 
-void GimbalController::toggleGimbalNeutral(bool set)
-{
-    if (!_tryGetGimbalControl()) {
-        return;
-    }
-    uint32_t flags = 0;
-    if (set) {
-        flags |= GIMBAL_DEVICE_FLAGS_NEUTRAL;
-    } else {
-        flags &= ~GIMBAL_DEVICE_FLAGS_NEUTRAL;
-    }
-
-    sendPitchYawFlags(flags);
-}
-
 void GimbalController::toggleGimbalYawLock(bool set)
 {
     if (!_tryGetGimbalControl()) {

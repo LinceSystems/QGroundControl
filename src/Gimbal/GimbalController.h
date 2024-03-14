@@ -107,7 +107,6 @@ public:
     Q_INVOKABLE void sendPitchBodyYaw           (float pitch, float yaw, bool showError = true);
     Q_INVOKABLE void sendPitchAbsoluteYaw       (float pitch, float yaw, bool showError = true);
     Q_INVOKABLE void toggleGimbalRetracted      (bool set = false);
-    Q_INVOKABLE void toggleGimbalNeutral        (bool set = false);
     Q_INVOKABLE void toggleGimbalYawLock        (bool set = false);
     Q_INVOKABLE void acquireGimbalControl       ();
     Q_INVOKABLE void releaseGimbalControl       ();
@@ -115,7 +114,7 @@ public:
 public slots:
     // These slots are conected with joysticks for button control
     void gimbalYawLock              (bool yawLock) { toggleGimbalYawLock(yawLock); }
-    void centerGimbal               ();
+    Q_INVOKABLE void centerGimbal   ();
     void gimbalPitchStep            (int direction);
     void gimbalYawStep              (int direction);
 
