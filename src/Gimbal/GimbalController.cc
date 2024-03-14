@@ -7,17 +7,25 @@
 
 #include <Eigen/Eigen>
 
-QGC_LOGGING_CATEGORY(GimbalLog,         "GimbalLog")
+QGC_LOGGING_CATEGORY(GimbalLog, "GimbalLog")
+
+const char* GimbalController::_gimbalFactGroupNamePrefix =  "gimbal";
+const char* Gimbal::_absoluteRollFactName =                 "gimbalRoll";
+const char* Gimbal::_absolutePitchFactName =                "gimbalPitch";
+const char* Gimbal::_bodyYawFactName =                      "gimbalYaw";
+const char* Gimbal::_absoluteYawFactName =                  "gimbalAzimuth";
+const char* Gimbal::_deviceIdFactName =                     "deviceId";
 
 Gimbal::Gimbal()
-    : QObject(nullptr)
+    : FactGroup(100, ":/json/Vehicle/GimbalFact.json") // No need to set parent as this will be deleted by gimbalController destructor
 {
-
+    _initFacts();
 }
 
 Gimbal::Gimbal(const Gimbal& other)
-    : QObject(nullptr)
+    : FactGroup(100, ":/json/Vehicle/GimbalFact.json") // No need to set parent as this will be deleted by gimbalController destructor
 {
+    _initFacts();
     *this = other;
 }
 
@@ -32,18 +40,40 @@ const Gimbal& Gimbal::operator=(const Gimbal& other)
     isComplete                = other.isComplete;
     retracted                 = other.retracted;
     neutral                   = other.neutral;
-    _yawLock                   = other._yawLock;
     _haveControl              = other._haveControl;
     _othersHaveControl        = other._othersHaveControl;
-    _absoluteRoll          = other._absoluteRoll;
-    _absolutePitch         = other._absolutePitch;
-    _bodyYaw               = other._bodyYaw;
-    _absoluteYaw           = other._absoluteYaw;
+    _absoluteRollFact         = other._absoluteRollFact;
+    _absolutePitchFact        = other._absolutePitchFact;
+    _bodyYawFact              = other._bodyYawFact;
+    _absoluteYawFact          = other._absoluteYawFact;
+    _deviceIdFact             = other._deviceIdFact;
+    _yawLock                  = other._yawLock;
     _haveControl              = other._haveControl;
     _othersHaveControl        = other._othersHaveControl;
-    _deviceId                 = other._deviceId;
 
     return *this;
+}
+
+// To be called EXCLUSIVELY in Gimbal constructors
+void Gimbal::_initFacts()
+{
+    _absoluteRollFact =     Fact(0, _absoluteRollFactName,  FactMetaData::valueTypeFloat);
+    _absolutePitchFact =    Fact(0, _absolutePitchFactName, FactMetaData::valueTypeFloat);
+    _bodyYawFact =          Fact(0, _bodyYawFactName,       FactMetaData::valueTypeFloat);
+    _absoluteYawFact =      Fact(0, _absoluteYawFactName,   FactMetaData::valueTypeFloat);
+    _deviceIdFact =         Fact(0, _deviceIdFactName,      FactMetaData::valueTypeUint8);
+
+    _addFact(&_absoluteRollFact,    _absoluteRollFactName);
+    _addFact(&_absolutePitchFact,   _absolutePitchFactName);
+    _addFact(&_bodyYawFact,         _bodyYawFactName);
+    _addFact(&_absoluteYawFact,     _absoluteYawFactName);
+    _addFact(&_deviceIdFact,        _deviceIdFactName);
+
+    _absoluteRollFact.setRawValue   (0.0f);
+    _absolutePitchFact.setRawValue  (0.0f);
+    _bodyYawFact.setRawValue        (0.0f);
+    _absoluteYawFact.setRawValue    (0.0f);
+    _deviceIdFact.setRawValue       (0);
 }
 
 GimbalController::GimbalController(MAVLinkProtocol* mavlink, Vehicle* vehicle)
@@ -204,7 +234,7 @@ GimbalController::_handleGimbalDeviceAttitudeStatus(const mavlink_message_t& mes
 
     // We do a reverse lookup here
     auto gimbal_it = std::find_if(_potentialGimbals.begin(), _potentialGimbals.end(),
-                 [&](auto& gimbal) { return gimbal.deviceId() == gimbal_device_id_or_compid; });
+                 [&](auto& gimbal) { return gimbal.deviceId()->rawValue().toUInt() == gimbal_device_id_or_compid; });
 
     if (gimbal_it == _potentialGimbals.end()) {
         qCDebug(GimbalLog) << "_handleGimbalDeviceAttitudeStatus for unknown device id: " << gimbal_device_id_or_compid << " from component id: " << message.compid;
@@ -225,7 +255,7 @@ GimbalController::_handleGimbalDeviceAttitudeStatus(const mavlink_message_t& mes
 
     if (yaw_in_vehicle_frame) {
         float bodyYaw = qRadiansToDegrees(yaw);
-        float absoluteYaw = gimbal_it->bodyYaw() + _vehicle->heading()->rawValue().toFloat();
+        float absoluteYaw = gimbal_it->bodyYaw()->rawValue().toFloat() + _vehicle->heading()->rawValue().toFloat();
         if (absoluteYaw > 180.0f) {
             absoluteYaw -= 360.0f;
         }
@@ -235,7 +265,7 @@ GimbalController::_handleGimbalDeviceAttitudeStatus(const mavlink_message_t& mes
 
     } else {
         float absoluteYaw = qRadiansToDegrees(yaw);
-        float bodyYaw = gimbal_it->bodyYaw() - _vehicle->heading()->rawValue().toFloat();
+        float bodyYaw = gimbal_it->bodyYaw()->rawValue().toFloat() - _vehicle->heading()->rawValue().toFloat();
         if (bodyYaw < 180.0f) {
             bodyYaw += 360.0f;
         }
@@ -283,15 +313,15 @@ GimbalController::_checkComplete(Gimbal& gimbal, uint8_t compid)
                                  (gimbal.requestStatusRetries > 2) ? 0 : 5000000); // request default rate, if we don't succeed, last attempt is fixed 0.2 Hz instead
         --gimbal.requestStatusRetries;
         qCDebug(GimbalLog) << "attempt to set GIMBAL_MANAGER_STATUS message at" << (gimbal.requestStatusRetries > 2 ? "default rate" : "0.2 Hz") << "interval for device: "
-                           << gimbal.deviceId() << "compID: " << compid << ", retries remaining: " << gimbal.requestStatusRetries;
+                           << gimbal.deviceId()->rawValue().toUInt() << "compID: " << compid << ", retries remaining: " << gimbal.requestStatusRetries;
     }
 
     if (!gimbal.receivedAttitude && gimbal.requestAttitudeRetries > 0 &&
-        gimbal.receivedInformation && gimbal.deviceId() != 0) {
+        gimbal.receivedInformation && gimbal.deviceId()->rawValue().toUInt() != 0) {
         // We request the attitude directly from the gimbal device component.
         // We can only do that once we have received the gimbal manager information
         // telling us which gimbal device it is responsible for.
-        _vehicle->sendMavCommand(gimbal.deviceId(),
+        _vehicle->sendMavCommand(gimbal.deviceId()->rawValue().toUInt(),
                                  MAV_CMD_SET_MESSAGE_INTERVAL,
                                  false /* no error */,
                                  MAVLINK_MSG_ID_GIMBAL_DEVICE_ATTITUDE_STATUS,
@@ -313,6 +343,8 @@ GimbalController::_checkComplete(Gimbal& gimbal, uint8_t compid)
     }
 
     _gimbals.append(&gimbal);
+    // This is needed for new Gimbals telemetry to be available for the user to show in flyview telemetry panel
+    _vehicle->_addFactGroup(&gimbal, QStringLiteral("%1%2").arg(_gimbalFactGroupNamePrefix).arg(gimbal.deviceId()->rawValue().toUInt()));
 }
 
 bool GimbalController::_tryGetGimbalControl()
@@ -354,9 +386,9 @@ void GimbalController::gimbalPitchStep(int direction)
     }
 
     if (_activeGimbal->yawLock()) {
-        sendPitchAbsoluteYaw(_activeGimbal->absolutePitch() + direction, _activeGimbal->absoluteYaw(), false);
+        sendPitchAbsoluteYaw(_activeGimbal->absolutePitch()->rawValue().toFloat() + direction, _activeGimbal->absoluteYaw()->rawValue().toFloat(), false);
     } else {
-        sendPitchBodyYaw(_activeGimbal->absolutePitch() + direction, _activeGimbal->bodyYaw(), false);
+        sendPitchBodyYaw(_activeGimbal->absolutePitch()->rawValue().toFloat() + direction, _activeGimbal->bodyYaw()->rawValue().toFloat(), false);
     }
 }
 
@@ -368,9 +400,9 @@ void GimbalController::gimbalYawStep(int direction)
     }
 
     if (_activeGimbal->yawLock()) {
-        sendPitchAbsoluteYaw(_activeGimbal->absolutePitch(), _activeGimbal->absoluteYaw() + direction, false);
+        sendPitchAbsoluteYaw(_activeGimbal->absolutePitch()->rawValue().toFloat(), _activeGimbal->absoluteYaw()->rawValue().toFloat() + direction, false);
     } else {
-        sendPitchBodyYaw(_activeGimbal->absolutePitch(), _activeGimbal->bodyYaw() + direction, false);
+        sendPitchBodyYaw(_activeGimbal->absolutePitch()->rawValue().toFloat(), _activeGimbal->bodyYaw()->rawValue().toFloat() + direction, false);
     }
 }
 
@@ -401,8 +433,8 @@ void GimbalController::gimbalOnScreenControl(float panPct, float tiltPct, bool c
         float panIncDesired =  panPct  * hFov;
         float tiltIncDesired = tiltPct * vFov;
 
-        float panDesired = panIncDesired + _activeGimbal->bodyYaw();
-        float tiltDesired = tiltIncDesired + _activeGimbal->absolutePitch();
+        float panDesired = panIncDesired + _activeGimbal->bodyYaw()->rawValue().toFloat();
+        float tiltDesired = tiltIncDesired + _activeGimbal->absolutePitch()->rawValue().toFloat();
 
         if (_activeGimbal->yawLock()) {
             sendPitchAbsoluteYaw(tiltDesired, panDesired + _vehicle->heading()->rawValue().toFloat(), false);
@@ -420,8 +452,8 @@ void GimbalController::gimbalOnScreenControl(float panPct, float tiltPct, bool c
         float panIncDesired  = panPct * maxSpeed  * 0.1f;
         float tiltIncDesired = tiltPct * maxSpeed * 0.1f;
 
-        float panDesired = panIncDesired + _activeGimbal->bodyYaw();
-        float tiltDesired = tiltIncDesired + _activeGimbal->absolutePitch();
+        float panDesired = panIncDesired + _activeGimbal->bodyYaw()->rawValue().toFloat();
+        float tiltDesired = tiltIncDesired + _activeGimbal->absolutePitch()->rawValue().toFloat();
 
         if (_activeGimbal->yawLock()) {
             sendPitchAbsoluteYaw(tiltDesired, panDesired + _vehicle->heading()->rawValue().toFloat(), false);
@@ -452,7 +484,7 @@ void GimbalController::sendPitchBodyYaw(float pitch, float yaw, bool showError) 
                 0,
                 flags,
                 0,
-                _activeGimbal->deviceId());
+                _activeGimbal->deviceId()->rawValue().toUInt());
 }
 
 void GimbalController::sendPitchAbsoluteYaw(float pitch, float yaw, bool showError) {
@@ -485,7 +517,7 @@ void GimbalController::sendPitchAbsoluteYaw(float pitch, float yaw, bool showErr
                 0,
                 flags,
                 0,
-                _activeGimbal->deviceId());
+                _activeGimbal->deviceId()->rawValue().toUInt());
 }
 
 void GimbalController::toggleGimbalRetracted(bool set)
@@ -527,13 +559,13 @@ void GimbalController::sendPitchYawFlags(uint32_t flags)
                 _vehicle->compId(),
                 MAV_CMD_DO_GIMBAL_MANAGER_PITCHYAW,
                 true,
-                _activeGimbal->absolutePitch(),
-                yaw_in_vehicle_frame ? _activeGimbal->bodyYaw() : _activeGimbal->absoluteYaw(),
+                _activeGimbal->absolutePitch()->rawValue().toFloat(),
+                yaw_in_vehicle_frame ? _activeGimbal->bodyYaw()->rawValue().toFloat() : _activeGimbal->absoluteYaw()->rawValue().toFloat(),
                 static_cast<float>(qQNaN()),
                 static_cast<float>(qQNaN()),
                 flags,
                 0,
-                _activeGimbal->deviceId());
+                _activeGimbal->deviceId()->rawValue().toUInt());
 }
 
 void GimbalController::acquireGimbalControl()
@@ -552,7 +584,7 @@ void GimbalController::acquireGimbalControl()
         -1.f, // Leave secondary unchanged
         NAN, // Reserved
         NAN, // Reserved
-        _activeGimbal->deviceId());
+        _activeGimbal->deviceId()->rawValue().toUInt());
 }
 
 void GimbalController::releaseGimbalControl()
@@ -571,5 +603,5 @@ void GimbalController::releaseGimbalControl()
         -1.f, // Leave secondary control unchanged
         NAN, // Reserved
         NAN, // Reserved
-        _activeGimbal->deviceId());
+        _activeGimbal->deviceId()->rawValue().toUInt());
 }
