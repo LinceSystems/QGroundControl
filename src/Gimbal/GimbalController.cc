@@ -274,9 +274,9 @@ GimbalController::_checkComplete(Gimbal& gimbal, uint8_t compid)
                                  MAV_CMD_SET_MESSAGE_INTERVAL,
                                  false /* no error */,
                                  MAVLINK_MSG_ID_GIMBAL_MANAGER_STATUS,
-                                 (gimbal.requestStatusRetries > 1) ? 0 : 5000000); // request default rate, if we don't succeed, last attempt is fixed 0.2 Hz instead
+                                 (gimbal.requestStatusRetries > 2) ? 0 : 5000000); // request default rate, if we don't succeed, last attempt is fixed 0.2 Hz instead
         --gimbal.requestStatusRetries;
-        qCDebug(GimbalLog) << "attempt to set GIMBAL_MANAGER_STATUS message at" << (gimbal.requestStatusRetries > 1 ? "default rate" : "0.2 Hz") << "interval for device: "
+        qCDebug(GimbalLog) << "attempt to set GIMBAL_MANAGER_STATUS message at" << (gimbal.requestStatusRetries > 2 ? "default rate" : "0.2 Hz") << "interval for device: "
                            << gimbal.deviceId() << "compID: " << compid << ", retries remaining: " << gimbal.requestStatusRetries;
     }
 
