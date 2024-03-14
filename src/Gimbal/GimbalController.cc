@@ -55,6 +55,11 @@ GimbalController::GimbalController(MAVLinkProtocol* mavlink, Vehicle* vehicle)
     connect(_vehicle, &Vehicle::mavlinkMessageReceived, this, &GimbalController::_mavlinkMessageReceived);
 }
 
+GimbalController::~GimbalController()
+{
+    _gimbals.clearAndDeleteContents();
+}
+
 void
 GimbalController::setActiveGimbal(Gimbal* gimbal)
 {

@@ -86,6 +86,7 @@ class GimbalController : public QObject
     Q_OBJECT
 public:
     GimbalController(MAVLinkProtocol* mavlink, Vehicle* vehicle);
+    ~GimbalController();
 
     class GimbalManager {
     public:
