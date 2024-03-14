@@ -103,6 +103,9 @@ GimbalController::_handleHeartbeat(const mavlink_message_t& message)
 
     auto& gimbalManager = _potentialGimbalManagers[message.compid];
 
+    // Note that we are working over potential gimbal managers here, instead of potential gimbals.
+    // This is because we address the gimbal manager by compid, but a gimbal device might have an
+    // id different than the message compid it comes from. For more information see https://mavlink.io/en/services/gimbal_v2.html
     if (!gimbalManager.receivedInformation && gimbalManager.requestGimbalManagerInformationRetries > 0) {
         _requestGimbalInformation(message.compid);
         --gimbalManager.requestGimbalManagerInformationRetries;
@@ -130,6 +133,9 @@ GimbalController::_handleGimbalManagerInformation(const mavlink_message_t& messa
     }
 
     gimbal.receivedInformation = true;
+    // It is important to flag our potential gimbal manager as well, so we stop requesting gimbal_manger_information message
+    auto& gimbalManager = _potentialGimbalManagers[message.compid];
+    gimbalManager.receivedInformation = true;
 
     _checkComplete(gimbal, message.compid);
 }
