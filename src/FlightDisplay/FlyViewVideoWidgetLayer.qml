@@ -103,7 +103,7 @@ Item {
 
         QGCLabel {
             id: gimbalPitchLabel
-            text: rootItem._gimbalAvailable ? "Tilt: " + rootItem._gimbalController.activeGimbal.absolutePitch.toFixed(1) : ""
+            text: rootItem._gimbalAvailable ? "Tilt: " + rootItem._gimbalController.activeGimbal.absolutePitch.rawValue.toFixed(1) : ""
             visible: rootItem._gimbalAvailable
             anchors.top: parent.top
             anchors.left: parent.horizontalCenter
@@ -112,7 +112,7 @@ Item {
 
         QGCLabel {
             id: gimbalPanLabel
-            text: rootItem._gimbalAvailable ? "Pan: " + rootItem._gimbalController.activeGimbal.bodyYaw.toFixed(1) + ", from North: " + rootItem._gimbalController.activeGimbal.absoluteYaw.toFixed(1): ""
+            text: rootItem._gimbalAvailable ? "Pan: " + rootItem._gimbalController.activeGimbal.bodyYaw.rawValue.toFixed(1) + ", from North: " + rootItem._gimbalController.activeGimbal.absoluteYaw.rawValue.toFixed(1): ""
             visible: rootItem._gimbalAvailable
             anchors.top: parent.top
             anchors.right: parent.horizontalCenter

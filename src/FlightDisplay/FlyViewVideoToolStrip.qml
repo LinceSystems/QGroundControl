@@ -104,7 +104,7 @@ Item {
                 },
                 ToolStripAction {
                     id:                 selectToolStripAction
-                    text:               qsTr("Gimbal ") + (_gimbalController && _gimbalController.activeGimbal ? _gimbalController.activeGimbal.deviceId : "")
+                    text:               qsTr("Gimbal ") + (_gimbalController && _gimbalController.activeGimbal ? _gimbalController.activeGimbal.deviceId.rawValue : "")
                     iconSource:         "/HA_Icons/SELECT.png"
                     checkable:          true
                     visible:            !toolStripPanelVideo.panelHidden && _gimbalController ? _gimbalController.gimbals.count : false
@@ -406,7 +406,7 @@ Item {
                     Layout.preferredWidth:  gimbalSelectorPanel.buttonWidth
                     Layout.preferredHeight: Layout.preferredWidth
                     Layout.alignment:       Qt.AlignHCenter | Qt.AlignVCenter
-                    text:                   qsTr("Gimbal ") + object.deviceId
+                    text:                   qsTr("Gimbal ") + object.deviceId.rawValue
                     fontPointSize:          gimbalSelectorPanel.buttonFontSize
                     onClicked: {
                         _gimbalController.activeGimbal = object

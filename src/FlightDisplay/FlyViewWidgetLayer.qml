@@ -340,7 +340,7 @@ Item {
 
         QGCLabel {
             id: gimbalPitchLabel
-            text: pitchRollRectangle._gimbalAvailable ? "Tilt: " + pitchRollRectangle._activeGimbal.absolutePitch.toFixed(1) : ""
+            text: pitchRollRectangle._gimbalAvailable ? "Tilt: " + pitchRollRectangle._activeGimbal.absolutePitch.rawValue.toFixed(1) : ""
             visible: pitchRollRectangle._gimbalAvailable
             anchors.top: parent.top
             anchors.left: parent.horizontalCenter
@@ -349,7 +349,7 @@ Item {
 
         QGCLabel {
             id: gimbalPanLabel
-            text: pitchRollRectangle._gimbalAvailable ? "Pan: " + pitchRollRectangle._activeGimbal.bodyYaw.toFixed(1) + ", from North: " + pitchRollRectangle._activeGimbal.absoluteYaw.toFixed(1) + " Yaw locked: " + pitchRollRectangle._activeGimbal.yawLock : ""
+            text: pitchRollRectangle._gimbalAvailable ? "Pan: " + pitchRollRectangle._activeGimbal.bodyYaw.rawValue.toFixed(1) + ", from North: " + pitchRollRectangle._activeGimbal.absoluteYaw.rawValue.toFixed(1) + " Yaw locked: " + pitchRollRectangle._activeGimbal.yawLock : ""
             visible: pitchRollRectangle._gimbalAvailable
             anchors.top: parent.top
             anchors.right: parent.horizontalCenter
