@@ -123,4 +123,16 @@
         <file alias="MODES.png">resources/HA_Icons/payload/MODES.png</file>
         <file alias="SELECT.png">resources/HA_Icons/payload/SELECT.png</file>
     </qresource>
+    <qresource prefix="/gimbal">
+        <file alias="camera_90.svg">resources/gimbal/camera_90.svg</file>
+        <file alias="map_click.svg">resources/gimbal/map_click.svg</file>
+        <file alias="neutral.svg">resources/gimbal/neutral.svg</file>
+        <file alias="retract_off.svg">resources/gimbal/retract_off.svg</file>
+        <file alias="yaw_lock.svg">resources/gimbal/yaw_lock.svg</file>
+        <file alias="home.svg">resources/gimbal/home.svg</file>
+        <file alias="map_coordinates.svg">resources/gimbal/map_coordinates.svg</file>
+        <file alias="payload.svg">resources/gimbal/payload.svg</file>
+        <file alias="retract_on.svg">resources/gimbal/retract_on.svg</file>
+        <file alias="yaw_unlock.svg">resources/gimbal/yaw_unlock.svg</file>
+    </qresource>
 </RCC>
