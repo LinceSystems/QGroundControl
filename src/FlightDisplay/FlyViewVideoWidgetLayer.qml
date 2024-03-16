@@ -90,33 +90,4 @@ Item {
             }
         }
     }
-
-    // Pitch/Roll indicators
-    Rectangle {
-        id: pitchRollRectangle
-        width: gimbalPitchLabel.width + gimbalPanLabel.width + ScreenTools.defaultFontPixelWidth * 20
-        height: gimbalPitchLabel.height + ScreenTools.defaultFontPixelWidth * 2
-        anchors.top: parent.top
-        anchors.horizontalCenter: parent.horizontalCenter
-        color: qgcPal.window
-        opacity: 0.8
-
-        QGCLabel {
-            id: gimbalPitchLabel
-            text: rootItem._gimbalAvailable ? "Tilt: " + rootItem._gimbalController.activeGimbal.absolutePitch.rawValue.toFixed(1) : ""
-            visible: rootItem._gimbalAvailable
-            anchors.top: parent.top
-            anchors.left: parent.horizontalCenter
-            anchors.margins: ScreenTools.defaultFontPixelWidth
-        }
-
-        QGCLabel {
-            id: gimbalPanLabel
-            text: rootItem._gimbalAvailable ? "Pan: " + rootItem._gimbalController.activeGimbal.bodyYaw.rawValue.toFixed(1) + ", from North: " + rootItem._gimbalController.activeGimbal.absoluteYaw.rawValue.toFixed(1): ""
-            visible: rootItem._gimbalAvailable
-            anchors.top: parent.top
-            anchors.right: parent.horizontalCenter
-            anchors.margins: ScreenTools.defaultFontPixelWidth
-        }
-    }
 }
