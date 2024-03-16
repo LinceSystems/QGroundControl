@@ -22,8 +22,7 @@ Item {
     property var  _gimbalControllerSettings: QGroundControl.settingsManager.gimbalControllerSettings
     property var  _activeVehicle:            QGroundControl.multiVehicleManager.activeVehicle
 
-    property bool shouldProcessClicks:   QGroundControl.videoManager.fullScreen || flyViewVideoWidgetLayer._gimbalControllerSettings.EnableOnScreenControl.value ||
-                                         _activeVehicle
+    property bool shouldProcessClicks:       _gimbalControllerSettings.EnableOnScreenControl.value && _activeGimbal
 
     // Functions for on screen gimbal control
     function clickControl() {
