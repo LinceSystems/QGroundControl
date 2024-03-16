@@ -56,6 +56,7 @@ MapQuickItem {
                 rotation:                     gimbalYaw + 180
                 onGimbalYawChanged:           canvas.requestPaint()
                 visible:                      vehicle && !isNaN(gimbalYaw)
+                opacity:                      object === vehicle.gimbalController.activeGimbal ? 1.0 : 0.4
 
                 Canvas {
                     id:                           canvas
