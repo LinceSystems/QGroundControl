@@ -237,7 +237,7 @@ Item {
             id:                         statusLabel
             text:                       activeGimbal && activeGimbal.retracted ? 
                                             qsTr("Retracted") :
-                                            (activeGimbal.yawLock ? qsTr("Yaw locked") : qsTr("Yaw follow"))
+                                            (activeGimbal && activeGimbal.yawLock ? qsTr("Yaw locked") : qsTr("Yaw follow"))
             Layout.columnSpan:          2
             Layout.alignment:           Qt.AlignHCenter
         }
