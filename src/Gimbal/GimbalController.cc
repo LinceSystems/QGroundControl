@@ -31,25 +31,25 @@ Gimbal::Gimbal(const Gimbal& other)
 
 const Gimbal& Gimbal::operator=(const Gimbal& other)
 {
-    requestInformationRetries = other.requestInformationRetries;
-    requestStatusRetries      = other.requestStatusRetries;
-    requestAttitudeRetries    = other.requestAttitudeRetries;
-    receivedInformation       = other.receivedInformation;
-    receivedStatus            = other.receivedStatus;
-    receivedAttitude          = other.receivedAttitude;
-    isComplete                = other.isComplete;
-    retracted                 = other.retracted;
-    neutral                   = other.neutral;
-    _haveControl              = other._haveControl;
-    _othersHaveControl        = other._othersHaveControl;
-    _absoluteRollFact         = other._absoluteRollFact;
-    _absolutePitchFact        = other._absolutePitchFact;
-    _bodyYawFact              = other._bodyYawFact;
-    _absoluteYawFact          = other._absoluteYawFact;
-    _deviceIdFact             = other._deviceIdFact;
-    _yawLock                  = other._yawLock;
-    _haveControl              = other._haveControl;
-    _othersHaveControl        = other._othersHaveControl;
+    _requestInformationRetries = other._requestInformationRetries;
+    _requestStatusRetries      = other._requestStatusRetries;
+    _requestAttitudeRetries    = other._requestAttitudeRetries;
+    _receivedInformation       = other._receivedInformation;
+    _receivedStatus            = other._receivedStatus;
+    _receivedAttitude          = other._receivedAttitude;
+    _isComplete                = other._isComplete;
+    _retracted                 = other._retracted;
+    _neutral                   = other._neutral;
+    _haveControl               = other._haveControl;
+    _othersHaveControl         = other._othersHaveControl;
+    _absoluteRollFact          = other._absoluteRollFact;
+    _absolutePitchFact         = other._absolutePitchFact;
+    _bodyYawFact               = other._bodyYawFact;
+    _absoluteYawFact           = other._absoluteYawFact;
+    _deviceIdFact              = other._deviceIdFact;
+    _yawLock                   = other._yawLock;
+    _haveControl               = other._haveControl;
+    _othersHaveControl         = other._othersHaveControl;
 
     return *this;
 }
@@ -157,12 +157,12 @@ GimbalController::_handleGimbalManagerInformation(const mavlink_message_t& messa
         gimbal.setDeviceId(information.gimbal_device_id);
     }
 
-    if (!gimbal.receivedInformation) {
+    if (!gimbal._receivedInformation) {
         qCDebug(GimbalLog) << "gimbal manager with compId: " << message.compid
             << " is responsible for gimbal device: " << information.gimbal_device_id;
     }
 
-    gimbal.receivedInformation = true;
+    gimbal._receivedInformation = true;
     // It is important to flag our potential gimbal manager as well, so we stop requesting gimbal_manger_information message
     auto& gimbalManager = _potentialGimbalManagers[message.compid];
     gimbalManager.receivedInformation = true;
@@ -190,12 +190,12 @@ GimbalController::_handleGimbalManagerStatus(const mavlink_message_t& message)
     gimbal.setDeviceId(status.gimbal_device_id);
 
     // Only log this message once
-    if (!gimbal.receivedStatus) {
+    if (!gimbal._receivedStatus) {
         qCDebug(GimbalLog) << "_handleGimbalManagerStatus: gimbal manager with compId " << message.compid
             << " is responsible for gimbal device " << status.gimbal_device_id;
     }
 
-    gimbal.receivedStatus = true;
+    gimbal._receivedStatus = true;
 
     const bool haveControl =
         (status.primary_control_sysid == _mavlink->getSystemId()) &&
@@ -243,9 +243,9 @@ GimbalController::_handleGimbalDeviceAttitudeStatus(const mavlink_message_t& mes
 
     const bool yaw_in_vehicle_frame = _yawInVehicleFrame(attitude_status.flags);
 
-    gimbal_it->retracted = (attitude_status.flags & GIMBAL_DEVICE_FLAGS_RETRACT) > 0;
-    gimbal_it->neutral = (attitude_status.flags & GIMBAL_DEVICE_FLAGS_NEUTRAL) > 0;
+    gimbal_it->setRetracted((attitude_status.flags & GIMBAL_DEVICE_FLAGS_RETRACT) > 0);
     gimbal_it->setYawLock((attitude_status.flags & GIMBAL_DEVICE_FLAGS_YAW_LOCK) > 0);
+    gimbal_it->_neutral = (attitude_status.flags & GIMBAL_DEVICE_FLAGS_NEUTRAL) > 0;
 
     float roll, pitch, yaw;
     mavlink_quaternion_to_euler(attitude_status.q, &roll, &pitch, &yaw);
@@ -274,7 +274,7 @@ GimbalController::_handleGimbalDeviceAttitudeStatus(const mavlink_message_t& mes
         gimbal_it->setAbsoluteYaw(absoluteYaw);
     }
 
-    gimbal_it->receivedAttitude = true;
+    gimbal_it->_receivedAttitude = true;
 
     _checkComplete(*gimbal_it, message.compid);
 }
@@ -295,29 +295,29 @@ GimbalController::_requestGimbalInformation(uint8_t compid)
 void
 GimbalController::_checkComplete(Gimbal& gimbal, uint8_t compid)
 {
-    if (gimbal.isComplete) {
+    if (gimbal._isComplete) {
         // Already complete, nothing to do.
         return;
     }
 
-    if (!gimbal.receivedInformation && gimbal.requestInformationRetries > 0) {
+    if (!gimbal._receivedInformation && gimbal._requestInformationRetries > 0) {
         _requestGimbalInformation(compid);
-        --gimbal.requestInformationRetries;
+        --gimbal._requestInformationRetries;
     }
 
-    if (!gimbal.receivedStatus && gimbal.requestStatusRetries > 0) {
+    if (!gimbal._receivedStatus && gimbal._requestStatusRetries > 0) {
         _vehicle->sendMavCommand(compid,
                                  MAV_CMD_SET_MESSAGE_INTERVAL,
                                  false /* no error */,
                                  MAVLINK_MSG_ID_GIMBAL_MANAGER_STATUS,
-                                 (gimbal.requestStatusRetries > 2) ? 0 : 5000000); // request default rate, if we don't succeed, last attempt is fixed 0.2 Hz instead
-        --gimbal.requestStatusRetries;
-        qCDebug(GimbalLog) << "attempt to set GIMBAL_MANAGER_STATUS message at" << (gimbal.requestStatusRetries > 2 ? "default rate" : "0.2 Hz") << "interval for device: "
-                           << gimbal.deviceId()->rawValue().toUInt() << "compID: " << compid << ", retries remaining: " << gimbal.requestStatusRetries;
+                                 (gimbal._requestStatusRetries > 2) ? 0 : 5000000); // request default rate, if we don't succeed, last attempt is fixed 0.2 Hz instead
+        --gimbal._requestStatusRetries;
+        qCDebug(GimbalLog) << "attempt to set GIMBAL_MANAGER_STATUS message at" << (gimbal._requestStatusRetries > 2 ? "default rate" : "0.2 Hz") << "interval for device: "
+                           << gimbal.deviceId()->rawValue().toUInt() << "compID: " << compid << ", retries remaining: " << gimbal._requestStatusRetries;
     }
 
-    if (!gimbal.receivedAttitude && gimbal.requestAttitudeRetries > 0 &&
-        gimbal.receivedInformation && gimbal.deviceId()->rawValue().toUInt() != 0) {
+    if (!gimbal._receivedAttitude && gimbal._requestAttitudeRetries > 0 &&
+        gimbal._receivedInformation && gimbal.deviceId()->rawValue().toUInt() != 0) {
         // We request the attitude directly from the gimbal device component.
         // We can only do that once we have received the gimbal manager information
         // telling us which gimbal device it is responsible for.
@@ -327,15 +327,15 @@ GimbalController::_checkComplete(Gimbal& gimbal, uint8_t compid)
                                  MAVLINK_MSG_ID_GIMBAL_DEVICE_ATTITUDE_STATUS,
                                  0 /* request default rate */);
 
-        --gimbal.requestAttitudeRetries;
+        --gimbal._requestAttitudeRetries;
     }
 
-    if (!gimbal.receivedInformation || !gimbal.receivedStatus || !gimbal.receivedAttitude) {
+    if (!gimbal._receivedInformation || !gimbal._receivedStatus || !gimbal._receivedAttitude) {
         // Not complete yet.
         return;
     }
 
-    gimbal.isComplete = true;
+    gimbal._isComplete = true;
 
     // If there is no current active gimbal, set this one as active
     if (!_activeGimbal) {

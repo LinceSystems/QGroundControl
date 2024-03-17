@@ -14,6 +14,9 @@ class MavlinkProtocol;
 class Gimbal : public FactGroup
 {
     Q_OBJECT
+
+    friend class GimbalController; // so it can set private members of gimbal, it is the only class that will need to modify them
+
 public:
     Gimbal();
     Gimbal(const Gimbal& other);
@@ -25,6 +28,7 @@ public:
     Q_PROPERTY(Fact* absoluteYaw                READ absoluteYaw                CONSTANT)
     Q_PROPERTY(Fact* deviceId                   READ deviceId                   CONSTANT)
     Q_PROPERTY(bool  yawLock                    READ yawLock                    NOTIFY yawLockChanged)
+    Q_PROPERTY(bool  retracted                  READ retracted                  NOTIFY retractedChanged)
     Q_PROPERTY(bool  gimbalHaveControl          READ gimbalHaveControl          NOTIFY gimbalHaveControlChanged)
     Q_PROPERTY(bool  gimbalOthersHaveControl    READ gimbalOthersHaveControl    NOTIFY gimbalOthersHaveControlChanged)
 
@@ -34,6 +38,7 @@ public:
     Fact* absoluteYaw()                   { return &_absoluteYawFact;   }
     Fact* deviceId()                      { return &_deviceIdFact;      }
     bool  yawLock() const                 { return _yawLock;            }
+    bool  retracted() const               { return _retracted;          }
     bool  gimbalHaveControl() const       { return _haveControl;        }
     bool  gimbalOthersHaveControl() const { return _othersHaveControl;  }
 
@@ -43,36 +48,42 @@ public:
     void  setAbsoluteYaw(float absoluteYaw)     { _absoluteYawFact.setRawValue(absoluteYaw);                       }
     void  setDeviceId(uint id)                  { _deviceIdFact.setRawValue(id);                                   }
     void  setYawLock(bool yawLock)              { _yawLock = yawLock;       emit yawLockChanged();                 }
+    void  setRetracted(bool retracted)          { _retracted = retracted;   emit retractedChanged();                 }
     void  setGimbalHaveControl(bool set)        { _haveControl = set;       emit gimbalHaveControlChanged();       }
     void  setGimbalOthersHaveControl(bool set)  { _othersHaveControl = set; emit gimbalOthersHaveControlChanged(); }
 
-    unsigned requestInformationRetries = 3;
-    unsigned requestStatusRetries = 6;
-    unsigned requestAttitudeRetries = 3;
-    bool receivedInformation = false;
-    bool receivedStatus = false;
-    bool receivedAttitude = false;
-    bool isComplete = false;
-    bool retracted = false;
-    bool neutral = false;
 
 signals:
     void yawLockChanged();
+    void retractedChanged();
     void gimbalHaveControlChanged();
     void gimbalOthersHaveControlChanged();
 
 private:
     void _initFacts(); // To be called EXCLUSIVELY in Gimbal constructors
 
+    // Private members only accesed by friend class GimbalController
+    unsigned _requestInformationRetries = 3;
+    unsigned _requestStatusRetries = 6;
+    unsigned _requestAttitudeRetries = 3;
+    bool _receivedInformation = false;
+    bool _receivedStatus = false;
+    bool _receivedAttitude = false;
+    bool _isComplete = false;
+    bool _neutral = false;
+
+    // Q_PROPERTIES
     Fact _absoluteRollFact;
     Fact _absolutePitchFact;
     Fact _bodyYawFact;
     Fact _absoluteYawFact;
     Fact _deviceIdFact; // Component ID of gimbal device (or 1-6 for non-MAVLink gimbal)
-    bool  _yawLock = false;
-    bool  _haveControl = false;
-    bool  _othersHaveControl = false;
+    bool _yawLock = false;
+    bool _retracted = false;
+    bool _haveControl = false;
+    bool _othersHaveControl = false;
 
+    // Fact names
     static const char* _absoluteRollFactName;
     static const char* _absolutePitchFactName;
     static const char* _bodyYawFactName;
