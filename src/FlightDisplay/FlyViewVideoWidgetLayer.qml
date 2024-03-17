@@ -22,7 +22,7 @@ Item {
     property var  _gimbalControllerSettings: QGroundControl.settingsManager.gimbalControllerSettings
     property var  _activeVehicle:            QGroundControl.multiVehicleManager.activeVehicle
 
-    property bool shouldProcessClicks:       _gimbalControllerSettings.EnableOnScreenControl.value && _activeGimbal
+    property bool shouldProcessClicks:       _gimbalControllerSettings.EnableOnScreenControl.value && _activeGimbal ? true : false
 
     // Functions for on screen gimbal control
     function clickControl() {
