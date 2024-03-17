@@ -430,8 +430,8 @@ void GimbalController::gimbalOnScreenControl(float panPct, float tiltPct, bool c
         float hFov = qgcApp()->toolbox()->settingsManager()->gimbalControllerSettings()->CameraHFov()->rawValue().toFloat();
         float vFov = qgcApp()->toolbox()->settingsManager()->gimbalControllerSettings()->CameraVFov()->rawValue().toFloat();
 
-        float panIncDesired =  panPct  * hFov;
-        float tiltIncDesired = tiltPct * vFov;
+        float panIncDesired =  panPct  * hFov * 0.5f;
+        float tiltIncDesired = tiltPct * vFov * 0.5f;
 
         float panDesired = panIncDesired + _activeGimbal->bodyYaw()->rawValue().toFloat();
         float tiltDesired = tiltIncDesired + _activeGimbal->absolutePitch()->rawValue().toFloat();
