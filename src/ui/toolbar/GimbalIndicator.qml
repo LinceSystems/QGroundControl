@@ -235,7 +235,9 @@ Item {
 
         QGCLabel {
             id:                         statusLabel
-            text:                       activeGimbal && activeGimbal.yawLock ? "Yaw locked" : "Yaw follow"
+            text:                       activeGimbal && activeGimbal.retracted ? 
+                                            qsTr("Retracted") :
+                                            (activeGimbal.yawLock ? qsTr("Yaw locked") : qsTr("Yaw follow"))
             Layout.columnSpan:          2
             Layout.alignment:           Qt.AlignHCenter
         }
