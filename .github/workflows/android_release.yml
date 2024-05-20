@@ -39,6 +39,9 @@ jobs:
            ARTIFACT: QGroundControl-Herelink.apk
 
     steps:
+      - name: Remove unneeded files
+        run:  sudo rm -rf /usr/share/dotnet /opt/ghc "/usr/local/share/boost" "$AGENT_TOOLSDIRECTORY"
+        
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
