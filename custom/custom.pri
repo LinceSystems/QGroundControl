@@ -68,25 +68,25 @@ INCLUDEPATH += \
 #-------------------------------------------------------------------------------------
 # Custom Firmware/AutoPilot Plugin
 
-INCLUDEPATH += \
-    $$PWD/src/FirmwarePlugin/PX4 \
-    $$PWD/src/AutoPilotPlugin/PX4 \
-    $$PWD/src/FirmwarePlugin/AP \
-    $$PWD/src/AutoPilotPlugin/AP
-
-HEADERS+= \
-    $$PWD/src/AutoPilotPlugin/PX4/CustomPX4AutoPilotPlugin.h \
-    $$PWD/src/FirmwarePlugin/PX4/CustomPX4FirmwarePlugin.h \
-    $$PWD/src/FirmwarePlugin/PX4/CustomPX4FirmwarePluginFactory.h \
-    $$PWD/src/AutoPilotPlugin/AP/CustomAPAutoPilotPlugin.h \
-    $$PWD/src/FirmwarePlugin/AP/CustomAPFirmwarePlugin.h \
-    $$PWD/src/FirmwarePlugin/AP/CustomAPFirmwarePluginFactory.h
-
-SOURCES += \
-    $$PWD/src/AutoPilotPlugin/PX4/CustomPX4AutoPilotPlugin.cc \
-    $$PWD/src/FirmwarePlugin/PX4/CustomPX4FirmwarePlugin.cc \
-    $$PWD/src/FirmwarePlugin/PX4/CustomPX4FirmwarePluginFactory.cc \
-    $$PWD/src/AutoPilotPlugin/AP/CustomAPAutoPilotPlugin.cc \
-    $$PWD/src/FirmwarePlugin/AP/CustomAPFirmwarePlugin.cc \
-    $$PWD/src/FirmwarePlugin/AP/CustomAPFirmwarePluginFactory.cc \
+# INCLUDEPATH += \
+#     $$PWD/src/FirmwarePlugin/PX4 \
+#     $$PWD/src/AutoPilotPlugin/PX4 \
+#     $$PWD/src/FirmwarePlugin/AP \
+#     $$PWD/src/AutoPilotPlugin/AP
+# 
+# HEADERS+= \
+#     $$PWD/src/AutoPilotPlugin/PX4/CustomPX4AutoPilotPlugin.h \
+#     $$PWD/src/FirmwarePlugin/PX4/CustomPX4FirmwarePlugin.h \
+#     $$PWD/src/FirmwarePlugin/PX4/CustomPX4FirmwarePluginFactory.h \
+#     $$PWD/src/AutoPilotPlugin/AP/CustomAPAutoPilotPlugin.h \
+#     $$PWD/src/FirmwarePlugin/AP/CustomAPFirmwarePlugin.h \
+#     $$PWD/src/FirmwarePlugin/AP/CustomAPFirmwarePluginFactory.h
+# 
+# SOURCES += \
+#     $$PWD/src/AutoPilotPlugin/PX4/CustomPX4AutoPilotPlugin.cc \
+#     $$PWD/src/FirmwarePlugin/PX4/CustomPX4FirmwarePlugin.cc \
+#     $$PWD/src/FirmwarePlugin/PX4/CustomPX4FirmwarePluginFactory.cc \
+#     $$PWD/src/AutoPilotPlugin/AP/CustomAPAutoPilotPlugin.cc \
+#     $$PWD/src/FirmwarePlugin/AP/CustomAPFirmwarePlugin.cc \
+#     $$PWD/src/FirmwarePlugin/AP/CustomAPFirmwarePluginFactory.cc \
 
