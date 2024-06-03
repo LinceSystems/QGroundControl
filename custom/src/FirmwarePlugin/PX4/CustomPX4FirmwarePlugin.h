@@ -13,9 +13,4 @@ public:
 
     // FirmwarePlugin overrides
     AutoPilotPlugin*    autopilotPlugin (Vehicle* vehicle) final;
-    const QVariantList& toolIndicators  (const Vehicle* vehicle) final;
-    bool                hasGimbal       (Vehicle* vehicle, bool& rollSupported, bool& pitchSupported, bool& yawSupported) final;
-
-private:
-    QVariantList _toolIndicatorList;
 };
