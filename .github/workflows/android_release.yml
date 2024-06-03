@@ -34,10 +34,10 @@ jobs:
        include:
          - architecture: 32bits
            eabi: armeabi-v7a
-           ARTIFACT: QGroundControl32.apk
+           ARTIFACT: Lince-GroundControl-32.apk
          - architecture: 64bits
            eabi: arm64-v8a
-           ARTIFACT: QGroundControl64.apk
+           ARTIFACT: Lince-GroundControl-64.apk
 
     steps:
       - name: Checkout repo

@@ -97,4 +97,4 @@ jobs:
 
       - name: Run unit tests
         working-directory:  ${{ runner.temp }}/shadow_build_dir  
-        run:                xvfb-run -a ./staging/qgroundcontrol-start.sh --unittest
+        run:                xvfb-run -a ./staging/Lince-GroundControl-start.sh --unittest
