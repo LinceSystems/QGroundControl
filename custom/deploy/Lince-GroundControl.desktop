@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Lince-GroundControl
+GenericName=Ground Control Station
+Comment=UAS ground control station
+Icon=linuxIcon
+Exec=Lince-GroundControl-start.sh
+Terminal=false
+Categories=Utility;
