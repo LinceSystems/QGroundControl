@@ -2,4 +2,7 @@
     <qresource prefix="/qml">
         <file alias="QGroundControl/FlightDisplay/FlyViewCustomLayer.qml">res/CustomFlyViewOverlay.qml</file>
     </qresource>
+    <qresource prefix="/res">
+        <file alias="appIcon.ico">deploy/linux/appIcon.ico</file>
+    </qresource>
 </RCC>
