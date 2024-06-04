@@ -4,5 +4,9 @@
     </qresource>
     <qresource prefix="/res">
         <file alias="appIcon.ico">deploy/linux/appIcon.ico</file>
+        <file alias="QGCLogoBlack">res/brandingIcons/lince_white_full.svg</file>
+		<file alias="QGCLogoFull">res/brandingIcons/lince_white_full.svg</file>
+        <file alias="QGCLogoWhite">res/brandingIcons/lince_white_full.svg</file>
+        <file alias="QGCLogoArrow">res/brandingIcons/lince_white_full.svg</file>
     </qresource>
 </RCC>
