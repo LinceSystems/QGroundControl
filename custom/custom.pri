@@ -8,6 +8,12 @@ DEFINES += APP_VERSION_STR=\"\\\"$$CUSTOM_QGC_VERSION\\\"\"
 
 message(Custom QGC Version: $${CUSTOM_QGC_VERSION})
 
+# plugin factory, only use our custom arducopter plugin factory, based on standard apm plugin
+CONFIG  += QGC_DISABLE_APM_PLUGIN_FACTORY
+
+# disable px4 plugin factory altogether
+CONFIG  += QGC_DISABLE_PX4_PLUGIN_FACTORY
+
 # Windows Branding icon
 WindowsBuild {
     RC_ICONS = $$PWD/deploy/windows/CustomWindowsIcon.ico
@@ -55,3 +61,22 @@ HEADERS += \
 
 INCLUDEPATH += \
     $$PWD/src \
+
+#--------------------------------------------------------------------------------------
+# Custom Firmware/AutoPilot Plugin
+
+INCLUDEPATH += \
+    $$PWD/src/FirmwarePlugin \
+    $$PWD/src/AutoPilotPlugin
+
+HEADERS+= \
+    $$PWD/src/AutoPilotPlugin/CustomAPAutoPilotPlugin.h \
+    $$PWD/src/FirmwarePlugin/CustomAPCopterFirmwarePlugin.h \
+    $$PWD/src/FirmwarePlugin/CustomAPPlaneFirmwarePlugin.h \
+    $$PWD/src/FirmwarePlugin/CustomFirmwarePluginFactory.h \
+
+SOURCES += \
+    $$PWD/src/AutoPilotPlugin/CustomAPAutoPilotPlugin.cc \
+    $$PWD/src/FirmwarePlugin/CustomAPCopterFirmwarePlugin.cc \
+    $$PWD/src/FirmwarePlugin/CustomAPPlaneFirmwarePlugin.cc \
+    $$PWD/src/FirmwarePlugin/CustomFirmwarePluginFactory.cc \
