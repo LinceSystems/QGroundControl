@@ -40,7 +40,7 @@ public:
     QGCOptions*         options             (void) final;
 
     // Overrides from QGCTool
-    void                setToolbox          (QGCToolbox* toolbox);
+    void                setToolbox          (QGCToolbox* toolbox) override;
 
 private:
     CustomOptions*  _options = nullptr;
