@@ -3,6 +3,8 @@ find_package(Qt6 REQUIRED COMPONENTS Core)
 qt_add_library(Compression STATIC
     QGCLZMA.cc
     QGCLZMA.h
+    QGCQuaZip.cc
+    QGCQuaZip.h
     QGCZip.cc
     QGCZip.h
     QGCZlib.cc
@@ -28,14 +30,14 @@ set(MINIMUM_ZLIB_VERSION 1.3)
 if(NOT QGC_BUILD_DEPENDENCIES)
     set(ZLIB_USE_STATIC_LIBS ON)
     find_package(ZLIB ${MINIMUM_ZLIB_VERSION})
-    if(ZLIB_FOUND)
+    if(TARGET ZLIB::ZLIB)
         message(STATUS "Found ZLIB ${ZLIB_VERSION_STRING}")
         target_link_libraries(Compression PRIVATE ZLIB::ZLIB)
     else()
         find_package(PkgConfig)
         if(PkgConfig_FOUND)
             pkg_check_modules(ZLIB IMPORTED_TARGET ZLIB>=${MINIMUM_ZLIB_VERSION})
-            if(ZLIB_FOUND)
+            if(TARGET PkgConfig::ZLIB)
                 message(STATUS "Found ZLIB ${ZLIB_VERSION}")
                 target_link_libraries(Joystick PRIVATE PkgConfig::ZLIB)
             endif()
@@ -43,7 +45,7 @@ if(NOT QGC_BUILD_DEPENDENCIES)
     endif()
 endif()
 
-if(NOT ZLIB_FOUND)
+if(NOT TARGET ZLIB::ZLIB AND NOT TARGET PkgConfig::ZLIB)
     set(ZLIB_BUILD_EXAMPLES OFF CACHE INTERNAL "")
     set(SKIP_INSTALL_FILES ON CACHE INTERNAL "")
     set(SKIP_INSTALL_LIBRARIES ON CACHE INTERNAL "")
@@ -99,3 +101,16 @@ target_compile_definitions(xz
 )
 
 target_link_libraries(Compression PRIVATE xz)
+
+############### Quazip
+
+FetchContent_Declare(quazip
+    GIT_REPOSITORY https://github.com/stachenov/quazip.git
+    GIT_TAG v1.4
+    GIT_SHALLOW TRUE
+)
+set(QUAZIP_ENABLE_TESTS OFF CACHE INTERNAL "")
+set(QUAZIP_BZIP2 OFF CACHE INTERNAL "")
+FetchContent_MakeAvailable(quazip)
+
+target_link_libraries(Compression PRIVATE QuaZip::QuaZip)
